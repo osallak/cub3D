@@ -25,6 +25,29 @@
 
 #define COLOR 0xFF00FF
 
+//fov angle in radians
+#define FOV_ANGLE ( 60.0 *  M_PI / 180.0)
+
+
+//how many pixels per ray
+#define W_STRIP 15.0
+
+#define RAYS_NUMBER (COLS * SIZE /  W_STRIP)
+
+
+
+/*
+
+    //start first ray starting from half of the FOV
+    rayAngle = rotationAngle - ( FOV_ANGLE / 2)
+
+    basic for loop to travel over all rays and render'em
+    for (int i = 0; i < RAYS_NUMBER; i++){
+        //rayCast ...
+
+        rayAngle += FOV_ANGLE / RAYS_NUMBER
+    }
+*/
 typedef struct s_player
 {
     double	x;
@@ -37,12 +60,31 @@ typedef struct s_player
     double	rotationSpeed;
 }   t_player;
 
+
+
 typedef struct s_data{
     t_player *player;
     void    *mlx;
     void    *window;
     int     **map;
 } t_data;
+
+bool    checkForWalls(double newX, double newY, int **map)
+{
+    // if (newX < 0 || newY < 0 || newX > (COLS * SIZE) || newY > (ROWS * COLS))
+    //     return (true);
+    int oY = floor(newY / SIZE);
+    int oX = floor(newX / SIZE);
+
+
+    int eY = floor(newY / SIZE);
+    int eX = floor(newX / SIZE);
+
+
+    if (map[oY][oX] == 1 || map[eY][eX] == 1)
+        return (true);
+    return (false);
+}
 
 
 inline int max(int a, int b)
@@ -53,9 +95,9 @@ void initPlayer(t_player *player)
 {
     player->turnDirection = 0;// -1 left, 1 right
     player->walkDirection = 0;// -1 back, -1 front
-    player->rotationAngle = M_PI_2;
-    player->moveSpeed = 8.0;
-    player->rotationSpeed = 8.0 * (M_PI / 180);
+    player->rotationAngle = M_PI_2 ;
+    player->moveSpeed = 15.0;
+    player->rotationSpeed = 10.0 * (M_PI / 180);
     player->x = -1;
     player->y = -1;
 }
@@ -96,7 +138,7 @@ void draw_circle(void *mlx, void *window, double ox,double oy,  int r)
             //if the point position is less or equal to radius draw pixel
             if ( dis <= r){
 				// printf("distance: %f\n", dis);
-                mlx_pixel_put(mlx, window, i, j, 0x0000ff);
+                mlx_pixel_put(mlx, window, i, j, 0x0);
 			}
         }
     }
@@ -153,6 +195,8 @@ void draw_flesh(void *mlx, void *window, int x, int y, int size, int flag)
 
 int key_hook(int key, t_data* data)
 {
+    double newX;
+    double newY;
     if (key == 53){
         exit(0);
     } else if (key == 123){
@@ -160,47 +204,29 @@ int key_hook(int key, t_data* data)
     } else if (key == 124){
         data->player->turnDirection = 1;
     } else if (key == 125){
-        data->player->walkDirection = 1;
-    } else if (key == 126){
         data->player->walkDirection = -1;
+    } else if (key == 126){
+        data->player->walkDirection = 1;
     }
 
     data->player->rotationAngle += data->player->turnDirection * data->player->rotationSpeed; // it will add nothing if the key isn't pressed
-    data->player->x += cos(data->player->rotationAngle) * (data->player->walkDirection * data->player->moveSpeed);
-    data->player->y += sin(data->player->rotationAngle) * (data->player->walkDirection * data->player->moveSpeed);
+    newX = data->player->x + cos(data->player->rotationAngle) * (data->player->walkDirection * data->player->moveSpeed);
+    newY = data->player->y + sin(data->player->rotationAngle) * (data->player->walkDirection * data->player->moveSpeed);
     // printf("x:  %f\ty:  %f\n", data->player->x, data->player->y);
+
+    if (!checkForWalls(newX, newY, data->map)){
+        data->player->x = newX;
+        data->player->y = newY;
+        // printf("newX: %f   newY: %f    mapElement:   %d\n", newX, newY, data->map[(int)(newY / SIZE)][(int) (newX / SIZE)]);
+    }
     render(data->mlx, data->window, data->map, data->player);
     return 0;
 }
 
-void DDA(void *mlx, void * window, int X0, int Y0, int X1, int Y1)
-{
-    // calculate dx & dy
-    int dx = X1 - X0;
-    int dy = Y1 - Y0;
- 
-    // calculate steps required for generating pixels
-    int steps = abs(dx) > abs(dy) ? abs(dx) : abs(dy);
- 
-    // calculate increment in x & y for each steps
-    float Xinc = dx / (float)steps;
-    float Yinc = dy / (float)steps;
- 
-    // Put pixel for each step
-    float X = X0;
-    float Y = Y0;
-    for (int i = 0; i <= steps; i++) {
-        mlx_pixel_put(mlx, window, round(X), round(Y), 0x0); // put pixel at (X,Y)
-        X += Xinc; // increment in x at each step
-        Y += Yinc; // increment in y at each step
-        // usleep(100); // for visualization of line-
-                    // generation step by step
-    }
-}
 
 //ox stands for origin x
 //same goes for oy
-void drawLineDda(void *mlx, void *window, double  ox, double oy, double x, double y, int color)
+void drawLineDda(void *mlx, void *window, double  ox, double oy, double x, double y, int color, int **map)
 {
     double dx = x - ox;
     double dy = y - oy;
@@ -210,6 +236,8 @@ void drawLineDda(void *mlx, void *window, double  ox, double oy, double x, doubl
     double yinc = (double) dy /  steps;
 
     for (int i = 0; i < steps; i++){
+        if (checkForWalls(ox, oy, map) == true)
+            break ;
         mlx_pixel_put(mlx, window, round(ox) , round(oy), color);
         ox += xinc;
         oy += yinc;
@@ -220,6 +248,17 @@ void    resetPlayer(t_player *player)
 {
     player->turnDirection = 0;
     player->walkDirection = 0;
+}
+
+void castRays(void *mlx, void* window, int **map, t_player *player)
+{
+    double rayAngle = player->rotationAngle - (FOV_ANGLE / 2);
+    for (int i = 0; i < RAYS_NUMBER; i++){
+        drawLineDda(mlx, window, player->x, player->y, player->x + cos(rayAngle) * 100, player->y + sin(rayAngle) * 100, 0x9aff0000, map);
+        rayAngle += (double) FOV_ANGLE / (double) RAYS_NUMBER ;
+
+        // printf("%f    %f\n", rayAngle, FOV_ANGLE / RAYS_NUMBER);
+    }
 }
 
 void render(void *mlx, void* window, int **map, t_player *player)
@@ -246,16 +285,10 @@ void render(void *mlx, void* window, int **map, t_player *player)
         }
         y += SIZE;
     }
-    double directionX = player->x;
-    double directionY = player->y;
-    // printf("%f\n", player->rotationAngle);
-    rotatePoint(&directionX, &directionY, player->rotationAngle, 40);
-    // draw_circle(mlx, window, player->x + SIZE / 2, player->y + SIZE / 2, 10);
-	// fill_square(player->x, player->y, SIZE / 2, mlx, window, 0x0000ff);
-    draw_square(player->x, player->y, 15, mlx, window);
-    // drawLineDda(mlx, window, player->x , player->y, directionX + (SIZE / 2 ),directionY + (SIZE / 2), 0x0);
-    // DDA(mlx, window, player->x , player->y, directionX + (SIZE / 2 ),directionY + (SIZE / 2));
-    drawLineDda(mlx, window, player->x, player->y, player->x + cos(player->rotationAngle) * 40 , player->y + sin(player->rotationAngle) * 40, 0);
+    // printf("X: %f,     Y: %f\n", player->x, player->y);
+    draw_square(player->x, player->y, 10, mlx, window);
+    // drawLineDda(mlx, window, player->x, player->y, player->x + cos(player->rotationAngle) * 40 , player->y + sin(player->rotationAngle) * 40, 0x0000ff, map);
+    castRays(mlx, window, map, player);
     resetPlayer(player);
 }
 
@@ -268,7 +301,7 @@ int main()
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 1},
-        {1, 1, 1, 1, 0, 0, 0, 0, 0, 1,1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 0, 1, 0, 0, 0, 1,1, 1, 1, 1, 1},
         {1, 0, 0, 0, 0, 0, 1, 0, 0, 0,0, 0, 0, 0, 1},
         {1, 0, 0, 0, 0, 0, 1, 0, 0, 0,0, 0, 0, 0, 1},
         {1, 0, 0, 1, 1, 1, 1, 0, 0, 0,0, 0, 0, 0, 1},
@@ -295,7 +328,8 @@ int main()
         }
     }
     render(data->mlx, data->window,data->map, &player);
-    mlx_key_hook(data->window, key_hook, data);
+    // mlx_key_hook(data->window, key_hook, data);
+    mlx_hook(data->window, 2, 0, key_hook, data);
 
     // drawLineDda(data->mlx, data->window, 400, 400, 300, 350, 0xffffff);
     mlx_loop(data->mlx);
