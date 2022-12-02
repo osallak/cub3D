@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <limits.h>
+
 
 #define mapWidth 24
 #define mapHeight 24
@@ -24,6 +26,9 @@
 #define WEST 5
 
 #define COLOR 0xFF00FF
+
+double   distance(int x, int y, int ox, int oy);
+double normalizeAngle(double angle);
 
 //fov angle in radians
 #define FOV_ANGLE ( 60.0 *  M_PI / 180.0)
@@ -68,6 +73,8 @@ typedef struct s_data{
     void    *window;
     int     **map;
 } t_data;
+
+void cast( t_data *data, double rayAngle);
 
 bool    checkForWalls(double newX, double newY, int **map)
 {
@@ -166,7 +173,7 @@ void fill_square(int X, int Y,int length,  void *mlx, void *window, int color)
     }
 }
 
-void render(void *mlx, void* window, int **map, t_player *player);
+void render(t_data *data, void *mlx, void* window, int **map, t_player *player);
 
 void draw_flesh(void *mlx, void *window, int x, int y, int size, int flag)
 {
@@ -210,6 +217,7 @@ int key_hook(int key, t_data* data)
     }
 
     data->player->rotationAngle += data->player->turnDirection * data->player->rotationSpeed; // it will add nothing if the key isn't pressed
+    data->player->rotationAngle = normalizeAngle(data->player->rotationAngle); // reset angle if it out of bounds (2PI)
     newX = data->player->x + cos(data->player->rotationAngle) * (data->player->walkDirection * data->player->moveSpeed);
     newY = data->player->y + sin(data->player->rotationAngle) * (data->player->walkDirection * data->player->moveSpeed);
     // printf("x:  %f\ty:  %f\n", data->player->x, data->player->y);
@@ -219,7 +227,7 @@ int key_hook(int key, t_data* data)
         data->player->y = newY;
         // printf("newX: %f   newY: %f    mapElement:   %d\n", newX, newY, data->map[(int)(newY / SIZE)][(int) (newX / SIZE)]);
     }
-    render(data->mlx, data->window, data->map, data->player);
+    render(data, data->mlx, data->window, data->map, data->player);
     return 0;
 }
 
@@ -250,18 +258,20 @@ void    resetPlayer(t_player *player)
     player->walkDirection = 0;
 }
 
-void castRays(void *mlx, void* window, int **map, t_player *player)
+void castRays(t_data *data, void *mlx, void* window, int **map, t_player *player)
 {
     double rayAngle = player->rotationAngle - (FOV_ANGLE / 2);
     for (int i = 0; i < RAYS_NUMBER; i++){
-        drawLineDda(mlx, window, player->x, player->y, player->x + cos(rayAngle) * 100, player->y + sin(rayAngle) * 100, 0x9aff0000, map);
+        // drawLineDda(mlx, window, player->x, player->y, player->x + cos(rayAngle) * 100, player->y + sin(rayAngle) * 100, 0x9aff0000, map);
+        rayAngle = normalizeAngle(rayAngle);
+        cast(data, rayAngle);
         rayAngle += (double) FOV_ANGLE / (double) RAYS_NUMBER ;
 
         // printf("%f    %f\n", rayAngle, FOV_ANGLE / RAYS_NUMBER);
     }
 }
 
-void render(void *mlx, void* window, int **map, t_player *player)
+void render(t_data *data, void *mlx, void* window, int **map, t_player *player)
 {
   int ty = 0;
     int y = 0;
@@ -287,10 +297,163 @@ void render(void *mlx, void* window, int **map, t_player *player)
     }
     // printf("X: %f,     Y: %f\n", player->x, player->y);
     draw_square(player->x, player->y, 10, mlx, window);
-    // drawLineDda(mlx, window, player->x, player->y, player->x + cos(player->rotationAngle) * 40 , player->y + sin(player->rotationAngle) * 40, 0x0000ff, map);
-    castRays(mlx, window, map, player);
+    castRays(data, mlx, window, map, player);
+    drawLineDda(mlx, window, player->x, player->y, player->x + cos(player->rotationAngle) * 40 , player->y + sin(player->rotationAngle) * 40, 0x0, map);
     resetPlayer(player);
 }
+
+
+double normalizeAngle(double angle)
+{
+    if (angle < 0)
+        angle += (M_PI * 2.0);
+    else if (angle > (M_PI * 2.0))
+        angle -= (M_PI * 2.0);
+    return (angle);
+}
+
+//returns true if it's a wall
+bool    itIsWall(double x, double y, int **map)
+{
+    // printf("%d    %d\n", (int)(x / SIZE), (int)(y / SIZE));
+    return (map[(int)(y / SIZE)][(int)(x / SIZE)] == 1);
+}
+
+//cast Function
+
+void cast( t_data *data, double rayAngle)
+{
+    puts("before");//debug
+    printf("rayAngle: %f\n", rayAngle);
+    printf("px: %f\tpy: %f\n", data->player->x, data->player->y);
+    //from here to end this should be initialized before entering this function
+    double wallHitX = .0;
+    double wallHitY = .0;
+    double __distance = 0.0;
+    bool wasHitVertical = false;
+
+    bool isFacingDown = rayAngle > 0 && rayAngle < M_PI;
+    bool isFacingUp = !isFacingDown;
+
+    bool isFacingRight = rayAngle < M_PI_2 || rayAngle > (M_PI + M_PI_2);
+    bool isFacingLeft = !isFacingRight;
+
+    // the end
+
+    double xintercept = .0;
+    double yintercept = .0;
+    double xstep = .0;
+    double ystep = .0;
+
+    bool foundHorizHit = false;
+
+    double horizWallHitX = .0;
+    double horizWallHitY = .0;
+
+    yintercept = floor(data->player->y / SIZE) * SIZE;
+    printf("yintercept: %f\n", yintercept);
+
+    if (isFacingDown)
+        yintercept += SIZE;
+    
+    xintercept = data->player->x + (yintercept - data->player->y) / tan(rayAngle);//rayAngle should be in radians
+
+    ystep = SIZE;
+    if (isFacingUp)
+        ystep = -ystep;
+    
+    xstep = SIZE / tan(rayAngle);
+
+    if ((isFacingLeft && xstep > 0) || (isFacingRight && xstep < 0))
+        xstep = -xstep;
+
+    double nextHorizTouchX = xintercept;
+    double nextHorizTouchY = yintercept;
+
+    if (isFacingUp)
+        nextHorizTouchY--;
+    
+    // printf(isFacingUp ? "true\n" : "false\n");
+    
+    //increment xstep and ystep untill we found a wall
+    while ( nextHorizTouchX > 0 && nextHorizTouchY > 0 && nextHorizTouchX < (SIZE * COLS) && nextHorizTouchY < (SIZE * ROWS) )
+    {
+        printf("be-itiswall: %f    %f\n", nextHorizTouchX, nextHorizTouchY);
+        if (itIsWall(nextHorizTouchX, nextHorizTouchY, data->map)){
+            foundHorizHit = true;
+            horizWallHitX = nextHorizTouchX;
+            horizWallHitY = nextHorizTouchY;
+            break ;
+        }
+        nextHorizTouchX += xstep;
+        nextHorizTouchY += ystep;
+    }
+    puts("after");//debug
+
+    // VERTICAL RAY-GRID INTERSECTION CODE
+
+    bool foundVertWallHit = false;
+
+    double vertWallHitX = .0;
+    double vertWallHitY = .0;
+
+    xintercept = floor(data->player->x / SIZE) * SIZE;
+    
+    if (isFacingRight)
+        xintercept += SIZE;
+
+    yintercept = data->player->y + (xintercept - data->player->x) * tan(rayAngle);
+
+    xstep = SIZE;
+
+    if (isFacingLeft)
+        xstep = -xstep;
+    
+    ystep = SIZE * tan(rayAngle);
+
+    if ((isFacingUp && ystep > 0) || (isFacingDown && ystep < 0))
+        ystep = -ystep;
+    
+    double nextVertTouchX = xintercept;
+    double nextVertTouchY = yintercept;
+
+    if (isFacingLeft)
+        nextVertTouchX--;
+    
+    while (nextVertTouchX > 0 && nextVertTouchY > 0 && nextVertTouchX < (SIZE * COLS) && nextVertTouchY < (SIZE * ROWS))
+    {
+        if (itIsWall(nextVertTouchX, nextVertTouchY, data->map)){
+            foundVertWallHit = true;
+            vertWallHitX = nextVertTouchX;
+            vertWallHitY = nextVertTouchY;
+            break;
+        }
+        nextVertTouchX += xstep;
+        nextVertTouchY += ystep;
+
+    }
+    
+    // Calculate both horizontal and vertical distances and choose the smallest value
+
+    double  horizHitDistance = INT_MAX;
+    double vertHitDistance = INT_MAX;
+
+    if (foundHorizHit)
+        horizHitDistance = distance(data->player->x, data->player->y, horizWallHitX, horizWallHitY);
+    if (foundVertWallHit)
+        vertHitDistance = distance(data->player->x, data->player->y, vertWallHitX, vertWallHitY);
+
+    if ( horizHitDistance < vertHitDistance){
+        wallHitX = horizWallHitX;
+        wallHitY = horizWallHitY;
+    } else {
+        wallHitX = vertWallHitX;
+        wallHitY = vertWallHitY;
+    }
+
+    drawLineDda(data->mlx, data->window, data->player->x, data->player->y, wallHitX, wallHitY, 0xff0000, data->map);
+}
+
 
 int main()
 {
@@ -327,7 +490,7 @@ int main()
             data->map[j][i] = map[j][i];
         }
     }
-    render(data->mlx, data->window,data->map, &player);
+    render(data, data->mlx, data->window,data->map, &player);
     // mlx_key_hook(data->window, key_hook, data);
     mlx_hook(data->window, 2, 0, key_hook, data);
 
