@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/05 18:11:55 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/03 11:34:54 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2022/12/05 13:23:20 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ static	void	ft_clear_table(char **ptr, int index)
 	ptr = 0;
 }
 
-static unsigned int	count_rows(char *s, char c)
+static unsigned int	count_rows(const char *s, char c)
 {
 	unsigned int	i;
 	unsigned int	flag;

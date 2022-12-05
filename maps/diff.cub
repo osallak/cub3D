@@ -1,3 +1,12 @@
+NO ./assets/hh1.xpm
+SO ./assets/hh4.xpm
+EA ./assets/hh2.xpm
+WE ./assets/hh3.xpm
+
+
+C 111,18,49
+F 54,54,54
+
 111111111111111
 100000100000001
 100S011111111111111111111

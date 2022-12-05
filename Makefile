@@ -1,5 +1,6 @@
 NAME = bin/cub3D
-SRC = main.c parser.c get_next_line.c get_next_line_utils.c ft_split.c ft_strlcpy.c
+SRC = main.c parser.c get_next_line.c get_next_line_utils.c ft_split.c ft_strlcpy.c ft_split.c\
+ft_atoi.c
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -c -Iinclude -g -fsanitize=address
 LFLAGS = -lmlx -framework OpenGL -framework AppKit -fsanitize=address
