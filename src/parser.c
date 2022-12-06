@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/05 17:54:00 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2022/12/06 09:59:49 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -430,6 +430,92 @@ void	check_no_asset(char **map_line, t_map_manager* map_manager)
 	}
 }
 
+void	check_so_asset(char **map_line, t_map_manager* map_manager)
+{
+	char	**splitted;
+	int		fd;
+
+	splitted = ft_split(*map_line, ' ');
+	if (splitted && !my_strcmp(splitted[0], "SO") && splitted[1])
+	{
+		if (map_manager->so)
+			panic("Erorr: invalid map");
+		fd = open(splitted[1], O_RDONLY);
+		if (fd == -1)
+			panic("Error: can't open asset file");
+		close(fd);
+		map_manager->so = ft_strdup(splitted[1]);
+	}
+}
+
+void	check_we_asset(char **map_line, t_map_manager* map_manager)
+{
+	char	**splitted;
+	int		fd;
+
+	splitted = ft_split(*map_line, ' ');
+	if (splitted && !my_strcmp(splitted[0], "WE") && splitted[1])
+	{
+		if (map_manager->we)
+			panic("Erorr: invalid map");
+		fd = open(splitted[1], O_RDONLY);
+		if (fd == -1)
+			panic("Error: can't open asset file");
+		close(fd);
+		map_manager->we = ft_strdup(splitted[1]);
+	}
+}
+
+void	check_ea_asset(char **map_line, t_map_manager *map_manager)
+{
+	char	**splitted;
+	int		fd;
+
+	splitted = ft_split(*map_line, ' ');
+	if (splitted && !my_strcmp(splitted[0], "EA") && splitted[1])
+	{
+		if (map_manager->ea)
+			panic("Erorr: invalid map");
+		fd = open(splitted[1], O_RDONLY);
+		if (fd == -1)
+			panic("Error: can't open asset file");
+		close(fd);
+		map_manager->ea = ft_strdup(splitted[1]);
+	}
+}
+
+void	check_c_asset(char **map_line, t_map_manager *map_manager)
+{
+	char	**splitted;
+	char	**colors;
+
+	splitted = ft_split(*map_line, ' ');
+	if (splitted && !my_strcmp(splitted[0], "C") && splitted[1])
+	{
+		colors = ft_split(splitted[1], ',');
+		if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
+			panic("Error: missing colors");
+		map_manager->c = create_trgb(0, ft_atoi(colors[0]),
+				ft_atoi(colors[1]), ft_atoi(colors[2]));
+	}
+}
+
+void	check_f_asset(char **map_line, t_map_manager *map_manager)
+{
+	char	**colors;
+	char	**splitted;
+
+	splitted = ft_split(*map_line, ' ');
+	if (splitted && !my_strcmp(splitted[0], "F") && splitted[1])
+	{
+		colors = ft_split(splitted[1], ',');
+		if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
+			panic("Error: missing colors");
+		map_manager->f = create_trgb(0, ft_atoi(colors[0]),
+				ft_atoi(colors[1]), ft_atoi(colors[2]));
+	}
+}
+
 void	parse_assets(t_map_manager	*map_manager, const int map_fd, char **map_line, long *skip)
 {
 	skip_lines(skip, map_line, map_fd);
@@ -439,55 +525,11 @@ void	parse_assets(t_map_manager	*map_manager, const int map_fd, char **map_line,
 	{
 		++(*skip);
 		check_no_asset(map_line, map_manager);
-		if (splitted && !my_strcmp(splitted[0], "SO") && splitted[1])
-		{
-			if (map_manager->so)
-				panic("Erorr: invalid map");
-				int fd = open(splitted[1], O_RDONLY);
-				if (fd == -1)
-					panic("Error: can't open asset file");
-				close(fd);
-			map_manager->so = ft_strdup(splitted[1]);
-			
-		}
-		if (splitted && !my_strcmp(splitted[0], "WE") && splitted[1])
-		{
-			if (map_manager->we)
-				panic("Erorr: invalid map");
-				int fd = open(splitted[1], O_RDONLY);
-				if (fd == -1)
-					panic("Error: can't open asset file");
-				close(fd);
-			map_manager->we = ft_strdup(splitted[1]);
-			
-		}
-		if (splitted && !my_strcmp(splitted[0], "EA") && splitted[1])
-		{
-			if (map_manager->ea)
-				panic("Erorr: invalid map");
-				int fd = open(splitted[1], O_RDONLY);
-				if (fd == -1)
-					panic("Error: can't open asset file");
-				close(fd);
-			map_manager->ea = ft_strdup(splitted[1]);
-			
-		}
-		if (splitted && !my_strcmp(splitted[0], "C") && splitted[1])
-		{
-			char **colors = ft_split(splitted[1], ',');
-			if (!colors || (colors && (!colors[0] ||  !colors[1] || !colors[2])))
-				panic("Error: missing colors");
-			map_manager->c = create_trgb(0, ft_atoi(colors[0]), ft_atoi(colors[1]), ft_atoi(colors[2]));
-
-				
-		}
-		if (splitted && !my_strcmp(splitted[0], "F") && splitted[1])
-		{
-			char **colors = ft_split(splitted[1], ',');
-			if (!colors || (colors && (!colors[0] ||  !colors[1] || !colors[2])))
-				panic("Error: missing colors");
-			map_manager->f = create_trgb(0, ft_atoi(colors[0]), ft_atoi(colors[1]), ft_atoi(colors[2]));
-		}
+		check_so_asset(map_line, map_manager);
+		check_we_asset(map_line, map_manager);
+		check_ea_asset(map_line, map_manager);
+		check_c_asset(map_line, map_manager);
+		check_f_asset(map_line, map_manager);
 		skip_lines(skip, map_line, map_fd);
 		if (!*map_line)
 			return ;
