@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/06 09:59:49 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2022/12/09 12:02:44 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,9 +311,6 @@ void	check_validity_of_map(char **map, unsigned int map_lines)
 	}
 }
 
-#define VALID_CHARS " 10SWEN"
-#define PLAYER_CHAR "SWEN"
-
 void	_norm_check_map_character(t_quadri_long* tmp, char **map)
 {
 	tmp->bbegin = 1;
@@ -353,16 +350,6 @@ char	check_map_characters(char **map)
 }
 
 
-typedef struct s_map_manager
-{
-	char		*no;
-	char		*so;
-	char		*we;
-	char		*ea;
-	long		f;
-	long		c;
-	char		cPlayer;
-}	t_map_manager;
 
 #define VALID_ID "NSWEFC"
 
@@ -524,7 +511,7 @@ void	parse_assets(t_map_manager	*map_manager, const int map_fd, char **map_line,
 	while (ft_strchr(VALID_ID, *map_line[0]))
 	{
 		++(*skip);
-		check_no_asset(map_line, map_manager);
+		check_no_asset(map_line, map_manager); // free 
 		check_so_asset(map_line, map_manager);
 		check_we_asset(map_line, map_manager);
 		check_ea_asset(map_line, map_manager);
@@ -533,8 +520,6 @@ void	parse_assets(t_map_manager	*map_manager, const int map_fd, char **map_line,
 		skip_lines(skip, map_line, map_fd);
 		if (!*map_line)
 			return ;
-		// free(*map_line);
-		// map_line = get_next_line(map_fd);
 	}
 }
 
@@ -554,20 +539,19 @@ void	init_map_manager(t_map_manager *map_manager)
 	map_manager->ea = 0x0;
 }
 
-
 void	parse_map_file(int map_fd, char *file)
 {
 	char			**map;
 	unsigned int	map_lines;
 	char			*map_line;
-	t_map_manager	map_manager;
-	long	skip = 0;
+	t_map_manager	*map_manager = malloc(sizeof(t_map_manager));
+	long			skip = 0;
 
 	// TODO: parse assets
-	init_map_manager(&map_manager);
-	parse_assets(&map_manager, map_fd, &map_line, &skip);
-	if (map_manager.f == -1 || map_manager.c == -1 || !map_manager.no || !map_manager.so
-	|| !map_manager.we || !map_manager.ea)
+	init_map_manager(map_manager);
+	parse_assets(map_manager, map_fd, & map_line, &skip);
+	if (map_manager->f == -1 || map_manager->c == -1 || !map_manager->no || !map_manager->so
+	|| !map_manager->we || !map_manager->ea)
 		panic("Error: can't retrieve assets");
 	// printf("%ld\n", skip);
 	map_lines = get_map_size(map_fd, &map_line);
@@ -587,8 +571,10 @@ void	parse_map_file(int map_fd, char *file)
 	if (map_fd == -1)
 		exit(EXIT_FAILURE);
 	fill_map(map, map_fd, map_lines);
-	map_manager.cPlayer = check_map_characters(map);
+	map_manager->c_player = check_map_characters(map);
 	// for (unsigned int i = 0;i < map_lines;i += 1)
 	// 	printf("%s\n", map[i]);
 	check_validity_of_map(map, map_lines);
+	map_manager->map = map;
+	render(map_manager);
 }
