@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/09 14:37:49 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2022/12/10 10:36:32 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,9 +130,9 @@ void	draw_full_rect(int x, int y, int size, void *mlx, void *mlx_window, int col
 
 void	draw_circle(double ox, double oy, double radius, void * mlx, void * mlx_window, int color)
 {
-	for (int i = 0;i < 360; ++i)
+	for (double i = 0;i < 360; i+=0.1)
 	{
-		draw_line(ox, oy, ox + radius * cos(radians(i)), oy + radius * sin(radians(i)), mlx, mlx_window, color);
+		mlx_pixel_put(mlx, mlx_window, ox + radius * cos(radians(i)), oy + radius * sin(radians(i)), color);
 	}
 }
 
@@ -173,14 +173,38 @@ int controls(int keycode, t_cub_manager *manager)
 	if (keycode == 125)
 	{
 		manager->player.walk_direction = -1;
-		manager->player.x += (double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
-		manager->player.y += (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
+		double fx = manager->player.x +(double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
+		double fy =manager->player.y + (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
+		if ((int)fx/MAP_TILE >= 0 && fx / MAP_TILE < manager->map->map_width && fy / MAP_TILE>= 0 && fy / MAP_TILE < manager->map->map_height && manager->map->map[(int)floor(fy / (double)MAP_TILE)][(int)floor(fx / (double)MAP_TILE)] != '1')
+		{
+			printf("here\n");
+			printf("b-->%lf\n", manager->player.x);
+			manager->player.x += (double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
+			printf("a-->%lf\n", manager->player.x);
+			manager->player.y += (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
+		}
+		printf("%d\n", (int)floor(fx / (double)MAP_TILE));
+		printf("%d\n\n\n\n\n\n", (int)floor(fy / (double)MAP_TILE));
+		printf("-->%c\n", manager->map->map[(int)floor(fx / (double)MAP_TILE)][(int)floor(fy / (double)MAP_TILE)]);
 	}
 	if (keycode == 126)
 	{
 		manager->player.walk_direction = 1;
-		manager->player.x += (double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
-		manager->player.y += (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
+		double fx = manager->player.x +(double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
+		double fy =manager->player.y + (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
+		if ((int)fx/MAP_TILE >= 0 && fx / MAP_TILE < manager->map->map_width && fy / MAP_TILE>= 0 && fy / MAP_TILE < manager->map->map_height && manager->map->map[(int)floor(fy / (double)MAP_TILE)][(int)floor(fx / (double)MAP_TILE)] != '1')
+		{
+			printf("here\n");
+			printf("b-->%lf\n", manager->player.x);
+			manager->player.x += (double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
+			printf("a-->%lf\n", manager->player.x);
+			manager->player.y += (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
+		}
+		// manager->player.x += (double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
+		// manager->player.y += (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
+		printf("%d\n", (int)floor(fx / (double)MAP_TILE));
+		printf("%d\n\n\n\n\n\n", (int)floor(fy / (double)MAP_TILE));
+		printf("-->%c\n", manager->map->map[(int)floor(fx / (double)MAP_TILE)][(int)floor(fy / (double)MAP_TILE)]);
 	}
 	redraw(manager);
 	return 0;	
