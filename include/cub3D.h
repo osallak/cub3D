@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/09 14:31:53 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/08 11:46:10 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 # define VALID_CHARS " 10SWEN"
 # define PLAYER_CHAR "SWEN"
 # define TILE_SIZE 30
+# define LEN_SINGLE_RAY 1
+# define FOV 60
 
 size_t	ft_strlcpy(char *dst, char *src, size_t dstsize);
 
