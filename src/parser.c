@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/09 12:02:44 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/10 15:09:33 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -480,6 +480,17 @@ void	check_c_asset(char **map_line, t_map_manager *map_manager)
 	if (splitted && !my_strcmp(splitted[0], "C") && splitted[1])
 	{
 		colors = ft_split(splitted[1], ',');
+		if (splitted[1][0] == ',')
+			panic("error: `, at the begin of C asset");
+		for (unsigned int i = 0;i < ft_strlen(splitted[1]);++i)
+		{
+			if (splitted[1][i] == ',' && splitted[1][i+1] == ',')
+				panic("error: duplicate `,");
+			if (splitted[1][i] == ',' && !splitted[1][i + 1])
+			{
+				panic("error: `, at end of string");
+			}
+		}
 		if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
 			panic("Error: missing colors");
 		map_manager->c = create_trgb(0, ft_atoi(colors[0]),
@@ -496,6 +507,17 @@ void	check_f_asset(char **map_line, t_map_manager *map_manager)
 	if (splitted && !my_strcmp(splitted[0], "F") && splitted[1])
 	{
 		colors = ft_split(splitted[1], ',');
+		if (splitted[1][0] == ',')
+			panic("error: `, at the begin of F asset");
+		for (unsigned int i = 0;i < ft_strlen(splitted[1]);++i)
+		{
+			if (splitted[1][i] == ',' && splitted[1][i+1] == ',')
+				panic("error: duplicate `,");
+			if (splitted[1][i] == ',' && !splitted[1][i + 1])
+			{
+				panic("error: `, at end of string");
+			}
+		}
 		if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
 			panic("Error: missing colors");
 		map_manager->f = create_trgb(0, ft_atoi(colors[0]),

@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/09 21:22:11 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/10 11:53:41 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,8 +312,9 @@ void	redraw(t_cub_manager *manager)
 		double dist = calculate_line_intersection(angle, manager, &wall_hitx, &wall_hity);
 		dist = dist * cos(angle - manager->player.rotation_angle);
 		double height = (NORMAL_TILE / dist) * distProj;
+		double alpha = dist / (double)(manager->map->map_width * NORMAL_TILE);
 		// draw 3D
-		draw_full_rect(i * WALL_STRIP_WIDTH, round(manager->map->map_height * NORMAL_TILE * 1.0 / 2.0) - (height / 2.0), WALL_STRIP_WIDTH, round(height), manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, 0x00deffff);
+		draw_full_rect(i * WALL_STRIP_WIDTH, round(manager->map->map_height * NORMAL_TILE * 1.0 / 2.0) - (height / 2.0), WALL_STRIP_WIDTH, round(height), manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, create_trgb((int)(alpha * 255), 255, 255, 255));
 		dpair_add_back(&wall_hits, create_dpair((wall_hitx), (wall_hity)));	
 		// draw_line(round(manager->player.x), round(manager->player.y), (wall_hitx), (wall_hity), manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, 0x0000ff00);
 		angle += (radians(FOV) / (double)num_of_rays);
@@ -492,7 +493,7 @@ void	render(t_map_manager	*map_manager)
 	cub_manager.mlx_manager.mlx = mlx_init();
     cub_manager.map->wall_colors = 0x00ffffff;
 	// mlx_window = mlx_new_window(mlx, WIDTH, HEIGHT, "cub3D");
-	map_width = get_map_width(cub_manager.map);
+	cub_manager.map->map_width = map_width = get_map_width(cub_manager.map);
 	// printf("%ld\n", map_width);
 	map_height = get_map_height(cub_manager.map);
 	// clear_window(mlx, mlx_window, create_trgb(0, 255, 255, 255));
