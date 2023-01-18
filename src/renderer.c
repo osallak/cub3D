@@ -6,15 +6,14 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/10 11:53:41 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/18 18:09:35 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3D.h"
-#define WIDTH 1080
-#define HEIGHT 720
 
-inline 	double radians(double angle)
+
+double radians(double angle)
 
 {
 	return (angle * (M_PI / (double)180));
@@ -26,6 +25,17 @@ inline double dist(int x1, int x2, int y1, int y2)
     return sqrt(pow(x2 - x1, 2)
                 + pow(y2 - y1, 2) * 1.0);
 }
+
+void	cub_mlx_pixel_put(t_img_data *data, int x, int y, int limit_x, int limit_y, int color)
+{
+	char	*dst;
+
+	if (x < 0 || x >= limit_x || y < 0 || y >= limit_y)
+		return ;
+	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
+	*(unsigned int*)dst = color;
+}
+
 int max(int a, int b)
 {
     if (a > b)
@@ -33,8 +43,15 @@ int max(int a, int b)
     else
 	    return b;
 }
+int min(int a, int b)
+{
+    if (a > b)
+        return b;
+    else
+	    return a;
+}
 
-void draw_line(double x0, double y0, double x1, double y1, void *mlx, void *window, int color)
+void draw_line(double x0, double y0, double x1, double y1, int lx, int ly, t_cub_manager *manager, int color)
 {
   // Calculate the difference between the starting and ending x and y coordinates
   double dx = x1 - x0;
@@ -55,7 +72,7 @@ void draw_line(double x0, double y0, double x1, double y1, void *mlx, void *wind
   // Loop through the number of steps required to draw the line
   for (int i = 0; i <= st; ++i) {
     // Set the color of the pixel at (x, y)
-    mlx_pixel_put(mlx,window, round(x), round(y), color);
+    cub_mlx_pixel_put(&manager->mlx_manager.img_data ,round(x), round(y), lx, ly, color);
 
     // Increment the x and y coordinates
     x += xIncrement;
@@ -63,194 +80,6 @@ void draw_line(double x0, double y0, double x1, double y1, void *mlx, void *wind
   }
 }
 
-void	clear_window(void	*mlx, void	*mlx_window, int color)
-{
-	int	i;
-	int	j;
-
-	i = -1;
-	while (++i < HEIGHT)
-	{
-		j = -1;
-		while (++j < WIDTH)
-			mlx_pixel_put(mlx, mlx_window, j, i, color);
-	}
-}
-
-void	draw_empty_rect(int x, int y, int width, int height, void *mlx, void *mlx_window, int color)
-{
-	long	i;
-
-	i = -1;
-	while (++i < width)
-	{
-		mlx_pixel_put(mlx, mlx_window, x + i, y, color);
-		mlx_pixel_put(mlx, mlx_window, x + i, y + height, color);
-	}
-	i = -1;
-	while (++i < height)
-    {
-		mlx_pixel_put(mlx, mlx_window, x, y + i, color);
-		mlx_pixel_put(mlx, mlx_window,x + width, y + i, color);
-	}
-}
-
-void	draw_full_rect(int x, int y, int width,int height, void *mlx, void *mlx_window, int color)
-{
-	long	i;
-	long	j;
-
-	i = -1;
-	while (++i < height)
-	{
-		j = -1;
-		while (++j < width)
-			mlx_pixel_put(mlx, mlx_window, x + j, y + i, color);
-
-	}
-}
-#define SCALING_FACTOR ((double)0.3)
-#define NORMAL_TILE 30
-#define MAP_TILE ((double) NORMAL_TILE)
-#define LINE_LENGTH (30 )
-
-
-
-
-void	draw_circle(double ox, double oy, double radius, void * mlx, void * mlx_window, int color)
-{
-	for (double i = 0;i < 360; ++i)
-	{
-		mlx_pixel_put(mlx, mlx_window, ox + radius * cos(radians(i)), oy + radius * sin(radians(i)), color);
-	}
-}
-
-void	get_direction(int *facing_up, int *facing_left, double angle)
-{
-	if (angle > 0 && angle < M_PI)
-		*facing_up = -1;
-	if (angle < radians(90)|| angle > radians(270))
-		*facing_left = -1;
-}
-
-double	calculate_line_intersection(double angle, t_cub_manager *manager, double *wall_hitx
-, double *wall_hity)
-{
-	int hhit = 0;
-	int vhit = 0;
-	int facing_up = 1;
-	int facing_left = 1;
-	get_direction(&facing_up, &facing_left, angle);
-
-	// find the horizontal first intersection point
-	double fhintery = floor(manager->player.y / NORMAL_TILE) * NORMAL_TILE;
-	if (facing_up == -1)
-	{
-		fhintery += NORMAL_TILE;
-	}
-	double fhinterx = manager->player.x + ((fhintery - manager->player.y) / tan(angle));
-	// find the amount of increment each time
-	double hdeltay = NORMAL_TILE;
-	if (facing_up == 1)
-		hdeltay = -hdeltay;
-	double hdeltax = NORMAL_TILE / tan(angle);
-	// modifying the deltas depending on the direction
-	if (facing_left == 1 && hdeltax > 0)
-	    hdeltax = -hdeltax;
-	if (facing_left == -1 && hdeltax < 0)
-		hdeltax = -hdeltax;
-	double nexthx = fhinterx;
-	double nexthy = fhintery;
-	while (nexthy >= 0 && nexthy < manager->map->map_height * NORMAL_TILE && nexthx >= 0 && nexthx < (int) ft_strlen(manager->map->map[(int)(nexthy / NORMAL_TILE)]) * NORMAL_TILE)
-	{
-		if (facing_up == 1)
-		{
-			if (manager->map->map[(int)((nexthy - 1) / (double)NORMAL_TILE)][(int)(nexthx / (double)NORMAL_TILE)] == '1')
-			{
-                hhit = 1;
-				break;
-			}
-		}	
-		else if (manager->map->map[(int)((nexthy / (double)NORMAL_TILE))][(int)(nexthx / (double)NORMAL_TILE)] == '1')
-		{
-			hhit = 1;
-			break;
-		}
-		nexthx += hdeltax;
-		nexthy += hdeltay;
-	}
-	// check for vertical intersections
-	// finding the first intersection
-	double vinterx = floor(manager->player.x / (double)NORMAL_TILE) * (double)NORMAL_TILE;
-	if (facing_left == -1)
-		vinterx += NORMAL_TILE;
-	double vintery = manager->player.y + (tan(angle) * (vinterx - manager->player.x));
-	// calculating the deltas
-	double vdeltax = NORMAL_TILE;
-	if (facing_left == 1)
-		vdeltax = -vdeltax;
-	double vdeltay = tan(angle) * (double)NORMAL_TILE;
-	// changing the deltas depeding on the deltas
-	if (facing_up == 1 && vdeltay > 0)
-		vdeltay = -vdeltay;
-	if (facing_up == -1 && vdeltay < 0)
-		vdeltay = -vdeltay;
-	double nextvx = vinterx;
-	double nextvy = vintery;
-	while (nextvy >= 0 && nextvy < manager->map->map_height * NORMAL_TILE && nextvx >= 0 && nextvx < (int) ft_strlen(manager->map->map[(int)(nextvy / NORMAL_TILE)]) * NORMAL_TILE)
-	{
-		if (facing_left == 1)
-		{
-			if (manager->map->map[(int)((nextvy / (double)NORMAL_TILE))][(int)((nextvx - 1) / (double)NORMAL_TILE)] == '1')
-			{
-                vhit = 1;
-				break;
-			}
-		}
-		else 
-		{	
-			if (manager->map->map[(int)((nextvy / (double)NORMAL_TILE))][(int)(nextvx / (double)NORMAL_TILE)] == '1')
-			{
-                vhit = 1;
-				break;
-			}
-		}
-		nextvx += vdeltax;
-		nextvy += vdeltay;
-	}
-	if (vhit && hhit)
-	{
-		double d1 = dist(manager->player.x , nexthx, manager->player.y , nexthy);
-		double d2 = dist(manager->player.x , nextvx, manager->player.y , nextvy);
-		if (d1 <= d2)
-		{
-			*wall_hitx = nexthx;
-			*wall_hity = nexthy;
-			return d1;
-		}
-		else
-		{
-			*wall_hitx = nextvx;
-			*wall_hity = nextvy;
-			return d2 ;
-		}
-	}
-	else if (vhit)
-	{
-		double d = dist(manager->player.x , nextvx, manager->player.y , nextvy);
-		*wall_hitx = nextvx;
-		*wall_hity = nextvy;
-		return d;
-	}
-	else if (hhit)
-	{
-		double d = dist(manager->player.x , nexthx, manager->player.y , nexthy);
-		*wall_hitx = nexthx;
-		*wall_hity = nexthy;
-		return d;
-	}
-	return 0;
-}
 
 void normalize_angle(double *ang)
 {
@@ -294,163 +123,18 @@ void	dpair_add_back(t_dpair **head, t_dpair *new)
 		p->next = new;
 	}	
 }
-#define WALL_STRIP_WIDTH 1
 
-void	redraw(t_cub_manager *manager)
+void clear_window(t_cub_manager * manager, int color, int lx, int ly)
 {
-	t_dpair *wall_hits = 0x0;
-	clear_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, 0);
-	long i = -1;
-	double angle = manager->player.rotation_angle - radians(FOV) / 2.;
-	int num_of_rays = manager->map->map_width * NORMAL_TILE / WALL_STRIP_WIDTH; // divided by LEN_SINGLE_RAY
-	double wall_hitx = 0, wall_hity = 0;
-	double distProj = (manager->map->map_width * NORMAL_TILE * 1.0 / tan(radians((double)FOV / 2.0)));
-	// for (int i = 0; i < 1; ++i)
-	for (int i = 0; i < num_of_rays; ++i)
-    {
-		normalize_angle(&angle);
-		double dist = calculate_line_intersection(angle, manager, &wall_hitx, &wall_hity);
-		dist = dist * cos(angle - manager->player.rotation_angle);
-		double height = (NORMAL_TILE / dist) * distProj;
-		double alpha = dist / (double)(manager->map->map_width * NORMAL_TILE);
-		// draw 3D
-		draw_full_rect(i * WALL_STRIP_WIDTH, round(manager->map->map_height * NORMAL_TILE * 1.0 / 2.0) - (height / 2.0), WALL_STRIP_WIDTH, round(height), manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, create_trgb((int)(alpha * 255), 255, 255, 255));
-		dpair_add_back(&wall_hits, create_dpair((wall_hitx), (wall_hity)));	
-		// draw_line(round(manager->player.x), round(manager->player.y), (wall_hitx), (wall_hity), manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, 0x0000ff00);
-		angle += (radians(FOV) / (double)num_of_rays);
-	}
-	while (++i < manager->map->map_height)
+	int i = -1;
+	while (++i < ly)
 	{
-		long j = -1;
-		int ii = i * MAP_TILE * SCALING_FACTOR;
-		while (++j < ft_strlen(manager->map->map[i]))
+		int j = -1;
+		while (++j < lx)
 		{
-			double jj = j * MAP_TILE * SCALING_FACTOR;
-			if (manager->map->map[i][j] == '1')
-				draw_full_rect(jj , ii, MAP_TILE * SCALING_FACTOR, MAP_TILE * SCALING_FACTOR, manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, create_trgb(1, 0, 255,0));
-				//  draw_empty_rect(jj, ii, MAP_TILE, MAP_TILE, manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->map->wall_colors);
+			cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, lx, ly, color);
 		}
-	}
-	// draw_line( manager->player.x * SCALING_FACTOR,  manager->player.y * SCALING_FACTOR,
-	// SCALING_FACTOR * manager->player.x + LINE_LENGTH * cos(manager->player.rotation_angle),
-	// SCALING_FACTOR * manager->player.y + LINE_LENGTH * sin(manager->player.rotation_angle),
-	// manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, 0x00ff0000);
-	for (int i = 0;i < num_of_rays;++i)
-	// for (int i = 0;i < 1;++i)
-	{
-		// printf("%lf\n", round(wall_hits->x * SCALING_FACTOR));
-		draw_line(round(manager->player.x * SCALING_FACTOR) , round(manager->player.y * SCALING_FACTOR), round(wall_hits->x * SCALING_FACTOR), round(wall_hits->y * SCALING_FACTOR), manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, 0x00ab0000);
-		wall_hits = wall_hits->next;
-	}
-}
-int controls(int keycode, t_cub_manager *manager)
-{
-	if (keycode == 123)
-	{
-		manager->player.turn_direction = -1;
-		manager->player.rotation_angle += manager->player.rotation_speed * manager->player.turn_direction;
-		if (manager->player.rotation_angle > 2. * M_PI)
-			manager->player.rotation_angle -= (2. * M_PI);
-		if (manager->player.rotation_angle < 0)
-			manager->player.rotation_angle += (2. * M_PI);
-		//printf("%lf\n", manager->player.rotation_speed);
-	}
-	if (keycode == 124)
-	{
-		manager->player.turn_direction = 1;
-		if (manager->player.rotation_angle > 2. * M_PI)
-			manager->player.rotation_angle -= (2. * M_PI);
-		if (manager->player.rotation_angle < 0)
-			manager->player.rotation_angle += (2. * M_PI);
-		manager->player.rotation_angle += manager->player.rotation_speed * manager->player.turn_direction;
-		//printf("%lf\n", manager->player.rotation_speed);
-	}
-	if (keycode == 125)
-	{
-		manager->player.walk_direction = -1;
-		double fx = manager->player.x +(double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
-		double fy =manager->player.y + (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
-		if ((int)fx/NORMAL_TILE >= 0 && fx / NORMAL_TILE < manager->map->map_width && fy / NORMAL_TILE>= 0 && fy / NORMAL_TILE < manager->map->map_height && manager->map->map[(int)(fy / (double)NORMAL_TILE)][(int)(fx / (double)NORMAL_TILE)] != '1') // TODO: change depeding on the wall width
-		{
-			manager->player.x += (double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
-			manager->player.y += (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
-		}
-	}
-	if (keycode == 126)
-	{
-		manager->player.walk_direction = 1;
-		double fx = manager->player.x +(double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
-		double fy =manager->player.y + (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
-		if ((int)fx/NORMAL_TILE >= 0 && fx / NORMAL_TILE < manager->map->map_width && fy / NORMAL_TILE>= 0 && fy / NORMAL_TILE < manager->map->map_height && manager->map->map[(int)(fy / (double)NORMAL_TILE)][(int)(fx / (double)NORMAL_TILE)] != '1')
-		{
-			manager->player.x += (double)manager->player.walk_direction * (double)manager->player.walk_speed * cos(manager->player.rotation_angle);
-			manager->player.y += (double)manager->player.walk_direction * (double)manager->player.walk_speed * sin(manager->player.rotation_angle);
-		}
-	}
-	if (keycode == 53)
-		exit(EXIT_SUCCESS);
-	redraw(manager);
-	return 0;	
-}
-
-void	draw_grid(long map_width, long map_height, t_cub_manager * cub_manager)
-{
-	cub_manager->mlx_manager.mlx_window = mlx_new_window(cub_manager->mlx_manager.mlx, map_width * NORMAL_TILE, map_height * NORMAL_TILE, "cub3D");
-	clear_window(cub_manager->mlx_manager.mlx, cub_manager->mlx_manager.mlx_window, 0);
-	// draw_line(100, 100,130, 90, mlx, mlx_window, 0x00ffffff);
-	long	i;
-	long	j;
-	double	ii;
-	double	jj;
-	i = -1;
-	// printf("%d\n", TILE_SIZE);
-	// t_player player;
-	cub_manager->map->map_width = map_width;
-	cub_manager->map->map_height = map_height;
-	cub_manager->player.rotation_speed = radians(5);
-	cub_manager->player.walk_speed = 10;
-	while (++i < map_height)
-	{
-		j = -1;
-		while (++j < ft_strlen(cub_manager->map->map[i]))
-		{
-			ii = MAP_TILE * i;
-			jj = MAP_TILE * j;
-			if (cub_manager->map->map[i][j] == '1')
-				draw_empty_rect(jj, ii, MAP_TILE, MAP_TILE, cub_manager->mlx_manager.mlx, cub_manager->mlx_manager.mlx_window, cub_manager->map->wall_colors);
-			if (ft_strchr(PLAYER_CHAR, cub_manager->map->map[i][j]))
-			{
-				draw_circle(jj , ii , MAP_TILE / 4, cub_manager->mlx_manager.mlx, cub_manager->mlx_manager.mlx_window, 0x00ff0000);
-				if (cub_manager->map->map[i][j] == 'S')
-				{
-					cub_manager->player.rotation_angle = radians(90);
-					cub_manager->player.x = jj ;
-					cub_manager->player.y = ii + MAP_TILE / 2;
-					draw_line(cub_manager->player.x, cub_manager->player.y, cub_manager->player.x + LINE_LENGTH * cos(cub_manager->player.rotation_angle),  cub_manager->player.y + LINE_LENGTH * sin(cub_manager->player.rotation_angle), cub_manager->mlx_manager.mlx, cub_manager->mlx_manager.mlx_window, 0x00ff0000);
-				}
-				if (cub_manager->map->map[i][j] == 'N')
-				{
-					cub_manager->player.rotation_angle = radians(270);
-					cub_manager->player.x = jj ;
-					cub_manager->player.y = ii + MAP_TILE / 2;
-					draw_line(cub_manager->player.x, cub_manager->player.y, cub_manager->player.x + LINE_LENGTH * cos(cub_manager->player.rotation_angle),  cub_manager->player.y + LINE_LENGTH * sin(cub_manager->player.rotation_angle), cub_manager->mlx_manager.mlx, cub_manager->mlx_manager.mlx_window, 0x00ff0000);
-				}
-				if (cub_manager->map->map[i][j] == 'E')
-				{
-					cub_manager->player.rotation_angle = 0;
-					cub_manager->player.x = jj ;
-					cub_manager->player.y = ii + MAP_TILE / 2;
-					draw_line(cub_manager->player.x, cub_manager->player.y, cub_manager->player.x + LINE_LENGTH * cos(cub_manager->player.rotation_angle),  cub_manager->player.y + LINE_LENGTH * sin(cub_manager->player.rotation_angle), cub_manager->mlx_manager.mlx, cub_manager->mlx_manager.mlx_window, 0x00ff0000);
-				}
-				if (cub_manager->map->map[i][j] == 'W')
-				{
-					cub_manager->player.rotation_angle = M_PI;
-					cub_manager->player.x = jj ;
-					cub_manager->player.y = ii+ MAP_TILE / 2 ;
-					draw_line(cub_manager->player.x, cub_manager->player.y, cub_manager->player.x + LINE_LENGTH * cos(cub_manager->player.rotation_angle),  cub_manager->player.y + LINE_LENGTH * sin(cub_manager->player.rotation_angle), cub_manager->mlx_manager.mlx, cub_manager->mlx_manager.mlx_window, 0x00ff0000);
-				}
-			}
-		}
+		
 	}
 }
 
@@ -482,23 +166,237 @@ long	get_map_height(t_map_manager *map_manager)
 	return (i);
 }
 
-void	render(t_map_manager	*map_manager)
+void	draw_full_rect(int x, int y, int width, int height, int lx, int ly, t_cub_manager *manager, int color)
 {
-	long	map_width;
-	long	map_height;
-	t_cub_manager	cub_manager;
-	// void	*mlx_window;
+	int i = -1;
+	while(++i < height)
+	{
+		draw_line(x , y + i, x + width, y + i, lx, ly, manager, color);
+	}
+}
 
-	cub_manager.map = map_manager;
-	cub_manager.mlx_manager.mlx = mlx_init();
-    cub_manager.map->wall_colors = 0x00ffffff;
-	// mlx_window = mlx_new_window(mlx, WIDTH, HEIGHT, "cub3D");
-	cub_manager.map->map_width = map_width = get_map_width(cub_manager.map);
-	// printf("%ld\n", map_width);
-	map_height = get_map_height(cub_manager.map);
-	// clear_window(mlx, mlx_window, create_trgb(0, 255, 255, 255));
-	draw_grid(map_width, map_height, &cub_manager);
-	// printf("%ld\n", map_height);
-	mlx_hook(cub_manager.mlx_manager.mlx_window, 2, 1L<<0, controls, &cub_manager);
-	mlx_loop(cub_manager.mlx_manager.mlx);
+void	draw_empty_rect(int x, int y, int width, int height, int lx, int ly, t_cub_manager *manager, int color)
+{
+	draw_line(x, y, x + width, y, lx, ly, manager, color);
+	draw_line(x, y, x, y + height, lx, ly, manager, color);
+	draw_line(x, y + height, x + width, y + height,lx, ly, manager, color);
+	draw_line(x + width, y, x + width, y + height,lx, ly, manager, color);
+}
+
+int controls(int key, t_cub_manager	*manager)
+{
+	double fx;
+	double fy;
+	if (key == 124)
+	{
+		manager->player.turn_direction = 1;
+		normalize_angle(&manager->player.rotation_angle);
+		manager->player.rotation_angle += manager->player.turn_direction * manager->player.rotation_speed;
+		normalize_angle(&manager->player.rotation_angle);
+	}
+	else if (key == 123)
+	{
+		manager->player.turn_direction = -1;
+		normalize_angle(&manager->player.rotation_angle);
+		manager->player.rotation_angle += manager->player.turn_direction * manager->player.rotation_speed;
+		normalize_angle(&manager->player.rotation_angle);
+	}
+	else if (key == 125)
+	{
+		manager->player.walk_direction = -1;
+		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fy / TILE_SIZE < ft_strlen(manager->map->map[(int)fy / TILE_SIZE]) && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
+		{	
+			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+			// printf("hop\n");
+		}
+		// printf("hooray\n");
+		
+	}
+	else if (key == 126)
+	{
+		manager->player.walk_direction = 1;
+		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fy / TILE_SIZE < ft_strlen(manager->map->map[(int)fy / TILE_SIZE]) && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
+		{	
+			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
+		}
+	}
+	if (key == 53)
+		exit(EXIT_SUCCESS);
+	draw(manager);
+}
+#define MINIMAP_WIDTH 10
+#define MINIMAP_HEIGHT 5
+#define MINIMAP_X 10
+#define MINIMAP_Y 10
+
+// void draw_minimap(int player_x, int player_y, int map[][MAP_WIDTH], t_cub_manager *manager)
+// {
+//     // Clear the mini-map
+//     clear_window(manager, 0x000000);
+
+//     // Calculate the starting and ending x and y coordinates for the mini-map
+//     int start_x = max(player_x - MINIMAP_WIDTH / 2, 0);
+//     int end_x = min(player_x + MINIMAP_WIDTH / 2, MAP_WIDTH);
+//     int start_y = max(player_y - MINIMAP_HEIGHT / 2, 0);
+//     int end_y = min(player_y + MINIMAP_HEIGHT / 2, MAP_HEIGHT);
+
+//     // Draw the mini-map
+//     for (int i = start_y; i < end_y; i++)
+//     {
+//         for (int j = start_x; j < end_x; j++)
+//         {
+//             if (map[i][j] == 1)
+//                 cub_mlx_pixel_put(&manager->mlx_manager.img_data, MINIMAP_X + j - start_x, MINIMAP_Y + i - start_y, 0xFFFFFF);
+//         }
+//     }
+
+//     // Draw the player on the mini-map
+//     cub_mlx_pixel_put(&manager->mlx_manager.img_data, MINIMAP_X + player_x - start_x, MINIMAP_Y + player_y - start_y, 0xFF0000);
+// }
+# define mini_x 15
+# define mini_y 15
+
+void	draw_empty_circle(double x, double y, double radius, int lx, int ly, t_cub_manager *manager, int color)
+{
+	for (int i = 0;i < 360;++i)
+	{
+		cub_mlx_pixel_put(&manager->mlx_manager.img_data, x + radius * cos(radians(i)), y + radius * sin(radians(i)), lx, ly, color);
+	}
+}
+
+
+// void drawMinimap(int map[][MAP_WIDTH], int playerX, int playerY) {
+//     int minimap[MINIMAP_SIZE][MINIMAP_SIZE];
+//     int minimapStartX = playerX - (MINIMAP_SIZE / 2);
+//     int minimapStartY = playerY - (MINIMAP_SIZE / 2);
+//     int minimapEndX = minimapStartX + MINIMAP_SIZE;
+//     int minimapEndY = minimapStartY + MINIMAP_SIZE;
+
+//     // Clear the minimap
+//     for (int i = 0; i < MINIMAP_SIZE; i++) {
+//         for (int j = 0; j < MINIMAP_SIZE; j++) {
+//             minimap[i][j] = 0;
+//         }
+//     }
+
+//     // Copy the relevant section of the map to the minimap
+//     for (int i = minimapStartY; i < minimapEndY; i++) {
+//         for (int j = minimapStartX; j < minimapEndX; j++) {
+//             int minimapX = j - minimapStartX;
+//             int minimapY = i - minimapStartY;
+//             if (i >= 0 && i < MAP_HEIGHT && j >= 0 && j < MAP_WIDTH) {
+//                 minimap[minimapY][minimapX] = map[i][j];
+//             }
+//         }
+//     }
+
+//     // Draw the minimap
+//     for (int i = 0; i < MINIMAP_SIZE; i++) {
+//         for (int j = 0; j < MINIMAP_SIZE; j++) {
+//             if (minimap[i][j] == 1) {
+//                 printf("#");
+//             } else {
+//                 printf(".");
+//             }
+//         }
+//         printf("\n");
+//     }
+// }
+
+int draw(t_cub_manager *manager)
+{
+	double	angle;
+	int		num_of_rays;
+	int		i;
+	// double	dist;
+	clear_window(manager, 0x00000000, WIDTH, HEIGHT);
+	double	height;
+	draw_empty_rect(0, 0, 10 * mini_x, 5 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
+	// double sx = fmax(manager->player.x / TILE_SIZE - 5.0, 0);
+	// double ex = fmin(manager->player.y / TILE_SIZE + 10, manager->map->map_height);
+	// double sy = fmax(manager->player.y / TILE_SIZE - 3.0, 0);
+	// double ey = fmin(manager->player.y / TILE_SIZE + 6, ft_strlen(manager->player))
+	// draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
+	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
+	angle = manager->player.rotation_angle - (radians(FOV / 2.0));
+	num_of_rays = WIDTH / (double) (WALL_STRIP_WIDTH);
+	mlx_put_image_to_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->mlx_manager.img_data.img, 0, 0);
+}
+
+int render(t_map_manager *map_manager)
+{
+	int	i;
+	int	j;
+	int	found_player;
+	t_cub_manager manager;
+
+	manager.mlx_manager.mlx = mlx_init();
+	manager.map = map_manager;
+	manager.map->map_width = get_map_width(manager.map);
+	manager.map->map_height = get_map_height(manager.map);
+	char **map = malloc(sizeof(char *) * manager.map->map_height);
+	for (int i = 0; i < manager.map->map_height; ++i)
+	{
+		map[i] = malloc(manager.map->map_width);
+	}
+	for (int i = 0;i < manager.map->map_height; ++i)
+	{
+		for (int j = 0;j < manager.map->map_width;++j)
+		{
+			if (j < ft_strlen(manager.map->map[i]))
+				map[i][j] = manager.map->map[i][j];
+			else
+				map[i][j] = ' ';
+		}
+	}
+	manager.map->map = map;
+	// for (int i = 0;i < manager.map->map_height; ++i)
+	// {
+	// 	for (int j = 0;j < manager.map->map_width;++j)
+	// 	{
+	// 		printf("<%c>", map[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
+	found_player = 0;
+	i = -1;
+	manager.player.rotation_speed = radians(R_SPEED);
+	manager.player.walk_speed = 5;
+	while (++i < manager.map->map_height)
+	{
+		j = -1;
+		while (++j < (int) ft_strlen(manager.map->map[i]))
+		{
+			if (ft_strchr(PLAYER_CHAR, manager.map->map[i][j]))
+			{
+				manager.player.x = j * TILE_SIZE + TILE_SIZE / 2.0;
+				manager.player.y = i * TILE_SIZE + TILE_SIZE / 2.0;
+				if (manager.map->map[i][j] == 'S')
+					manager.player.rotation_angle = radians(90);
+				if (manager.map->map[i][j] == 'N')
+					manager.player.rotation_angle = radians(270);
+				if (manager.map->map[i][j] == 'W')
+					manager.player.rotation_angle = radians(180);
+				if (manager.map->map[i][j] == 'E')
+					manager.player.rotation_angle = 0;
+				found_player = true;
+				break;
+			}
+		}
+		if (found_player)
+			break;
+	}
+	manager.mlx_manager.mlx_window = mlx_new_window(manager.mlx_manager.mlx, WIDTH, HEIGHT, "cub3D");
+	manager.mlx_manager.img_data.img = mlx_new_image(manager.mlx_manager.mlx, WIDTH, HEIGHT);
+	manager.mlx_manager.img_data.addr = mlx_get_data_addr(manager.mlx_manager.img_data.img, &manager.mlx_manager.img_data.bits_per_pixel, &manager.mlx_manager.img_data.line_length, &manager.mlx_manager.img_data.endian);
+	draw(&manager);
+	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
+	mlx_loop(manager.mlx_manager.mlx);
+	return (0);
 }

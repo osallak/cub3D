@@ -1,0 +1,4 @@
+- check the asset for direction to only include two strings
+- check for duplicated colors
+- delete the old map
+- remove the ft_strlen for everyloop
