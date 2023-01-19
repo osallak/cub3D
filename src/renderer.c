@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/18 18:09:35 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/19 16:09:26 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -259,8 +259,8 @@ int controls(int key, t_cub_manager	*manager)
 //     // Draw the player on the mini-map
 //     cub_mlx_pixel_put(&manager->mlx_manager.img_data, MINIMAP_X + player_x - start_x, MINIMAP_Y + player_y - start_y, 0xFF0000);
 // }
-# define mini_x 15
-# define mini_y 15
+# define mini_x 30
+# define mini_y 30
 
 void	draw_empty_circle(double x, double y, double radius, int lx, int ly, t_cub_manager *manager, int color)
 {
@@ -317,12 +317,23 @@ int draw(t_cub_manager *manager)
 	// double	dist;
 	clear_window(manager, 0x00000000, WIDTH, HEIGHT);
 	double	height;
-	draw_empty_rect(0, 0, 10 * mini_x, 5 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
-	// double sx = fmax(manager->player.x / TILE_SIZE - 5.0, 0);
-	// double ex = fmin(manager->player.y / TILE_SIZE + 10, manager->map->map_height);
-	// double sy = fmax(manager->player.y / TILE_SIZE - 3.0, 0);
-	// double ey = fmin(manager->player.y / TILE_SIZE + 6, ft_strlen(manager->player))
-	// draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
+	draw_empty_rect(0, 0, 10 * mini_x, 6 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
+	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
+	double mapex = manager->player.x + 5.0 * TILE_SIZE;
+	double mapsy = manager->player.y - 3.0 * TILE_SIZE;
+	double mapey = manager->player.y + 3.0 * TILE_SIZE;
+	for (int i = 0;i < mini_y * 6;++i)
+	{
+		for (int j = 0;j < mini_x * 10;++j)
+		{
+			int x = (mapsy + i) / TILE_SIZE;
+			int y = (mapsx + j) / TILE_SIZE;
+			if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
+				cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, mini_x * 10, mini_y * 6, 0x00ffffff);
+		}
+	}
+
+	draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
 	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
 	angle = manager->player.rotation_angle - (radians(FOV / 2.0));
 	num_of_rays = WIDTH / (double) (WALL_STRIP_WIDTH);
