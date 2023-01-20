@@ -2,3 +2,6 @@
 - check for duplicated colors
 - delete the old map
 - remove the ft_strlen for everyloop
+- init ray directions (is facing up/down/right/left)
+- refactor all raycasting functions calls
+- check if all the attributes are initialized

@@ -1,3 +1,6 @@
 obj/*
 bin/*
-.vscode
+.vscode/
+TODO
+changes
+*.sh

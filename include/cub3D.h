@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/14 15:46:37 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/19 20:45:33 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,24 +17,27 @@
 # include <fcntl.h>
 # include <stdlib.h>
 # include <math.h>
+# include <limits.h>
+# include <stdbool.h>
 # include "mlx.h"
 # include "get_next_line.h"
 
 # define VALID_CHARS " 10SWEN"
 # define PLAYER_CHAR "SWEN"
 # define TILE_SIZE 30
-# define WALL_STRIP_WIDTH 1
+# define WALL_STRIP_WIDTH 1.0
 # define FOV (60)
 # define SCALING_FACTOR ((double)0.3)
 # define LINE_LENGTH (30)
 # define WIDTH 1080
 # define HEIGHT 720
-# define true 1
-# define false 0
 # define R_SPEED 5
 # define W_SPEED 5
-
-
+# define MINIMAP_WIDTH 10
+# define MINIMAP_HEIGHT 5
+# define MINIMAP_X 10
+# define MINIMAP_Y 10
+# define NUMBER_OF_RAYS (WIDTH / WALL_STRIP_WIDTH)
 typedef struct	s_img_data {
 	void	*img;
 	char	*addr;
@@ -94,12 +97,25 @@ typedef struct s_player
 	double	y;
 }	t_player;
 
+typedef struct s_ray
+{
+	double	rayAngle;
+    double	wallHitX;
+    double	wallHitY;
+    double	distance;
+    bool	wasHitVertical;
+    bool	isRayFacingUp;
+    bool	isRayFacingDown;
+    bool	isRayFacingLeft;
+    bool	isRayFacingRight;
+}	t_ray;
 
 typedef struct s_cub_manager
 {
 	t_map_manager	*map;
 	t_mlx_manager	mlx_manager;
 	t_player		player;
+	t_ray			*rays;
 }	t_cub_manager;
 
 char	**ft_split(char *s, char c);
