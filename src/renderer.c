@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/22 18:39:52 by osallak          ###   ########.fr       */
+/*   Updated: 2023/01/22 20:59:32 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -341,7 +341,7 @@ int draw(t_cub_manager *manager)
 
 double 	__distance(double x, double y, double x1, double y1)
 {
-	return (sqrt(x1 - x) * (x1 - x) + (y1 - y) * (y1 - y));
+	return (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)));
 }
 
 bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
@@ -361,6 +361,7 @@ bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
 
 void	cast(t_ray* ray, t_cub_manager* manager)
 {
+	normalize_angle(&ray->rayAngle);
 	double	xintercept;
 	double	yintercept;
 	double	xstep, ystep;
@@ -451,12 +452,13 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	if (found_horz_wall_hit)
 		horz_hit_distance = __distance(manager->player.x, manager->player.y, horz_wall_hit_x, horz_wall_hit_y);
 	else
-		horz_hit_distance = 1.7E+308;//double max value
+		horz_hit_distance = 3.4E+38;//double max value
 	if (found_ver_hit)
 		vert_hit_distance = __distance(manager->player.x, manager->player.y, ver_hit_x, ver_hit_y);
 	else
-		vert_hit_distance = 1.7E+308;//double max value
+		vert_hit_distance = 3.4E+38;//double max value
 	
+	printf("ver_dis: %f\thor_dis: %f       (renderer.c:461)\n", vert_hit_distance, horz_hit_distance);
 	if (vert_hit_distance < horz_hit_distance)
 	{
 		ray->wallHitX = ver_hit_x;
@@ -473,9 +475,9 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 		//assing the color
 		ray->wasHitVertical = false;
 	}
-
-	printf("x0: %f, y0: %f, x1: %f, y1: %f,    (renderer.c:476)\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
-	draw_line(manager->player.x, manager->player.y, ray->wallHitX, ray->wallHitY, 0, 0, manager, 0xff0000);
+	// printf("")
+	// printf("x0: %f, y0: %f, x1: %f, y1: %f,    (renderer.c:478)\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
+	// draw_line(manager->player.x * SCALING_FACTOR, manager->player.y * SCALING_FACTOR, ray->wallHitX * SCALING_FACTOR, ray->wallHitY, 0, 0, manager, 0xff0000);
 }
 
 void	__initialize_ray_attributes(t_ray *ray)
@@ -541,9 +543,10 @@ void	render_3d_projected_walls(t_cub_manager* manager)
 void	rendering_3d_walls(t_cub_manager* manager)
 {
 	    for (int i = 0; i < NUMBER_OF_RAYS; i++) {
-        float perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
-        float distanceProjPlane = (WIDTH / 2) / tan(radians(FOV) / 2);
-        float projectedWallHeight = (TILE_SIZE / perpDistance) * distanceProjPlane;
+			// printf("distance: %f\n", manager->rays[i].distance);
+        double perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
+        double distanceProjPlane = (WIDTH / 2) / tan(radians(FOV) / 2);
+        double projectedWallHeight = (double)((double)TILE_SIZE / perpDistance) * distanceProjPlane;
 
         int wallStripHeight = (int)projectedWallHeight;
 
