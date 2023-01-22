@@ -6,12 +6,14 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/20 03:40:35 by osallak          ###   ########.fr       */
+/*   Updated: 2023/01/22 18:39:52 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3D.h"
+void	rendering_3d_walls(t_cub_manager* manager);
 
+void	cast_all_rays(t_cub_manager* manager);
 
 double radians(double angle)
 {
@@ -332,6 +334,7 @@ int draw(t_cub_manager *manager)
 	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
 	angle = manager->player.rotation_angle - (radians(FOV / 2.0));
 	num_of_rays = WIDTH / (double) (WALL_STRIP_WIDTH);
+	cast_all_rays(manager);
 	mlx_put_image_to_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->mlx_manager.img_data.img, 0, 0);
 	return 0;
 }
@@ -470,6 +473,9 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 		//assing the color
 		ray->wasHitVertical = false;
 	}
+
+	printf("x0: %f, y0: %f, x1: %f, y1: %f,    (renderer.c:476)\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
+	draw_line(manager->player.x, manager->player.y, ray->wallHitX, ray->wallHitY, 0, 0, manager, 0xff0000);
 }
 
 void	__initialize_ray_attributes(t_ray *ray)
@@ -491,6 +497,7 @@ void	__initialize_ray_attributes(t_ray *ray)
 	ray->isRayFacingLeft = !ray->isRayFacingRight;
 }
 
+void	render_3d_projected_walls(t_cub_manager* manager);
 void	cast_all_rays(t_cub_manager* manager)
 {
 	double	ray_angle;
@@ -508,7 +515,9 @@ void	cast_all_rays(t_cub_manager* manager)
 		__initialize_ray_attributes(&manager->rays[i]);
 		cast(&manager->rays[i], manager);
 		ray_angle+= angle_increment;
-	}	
+	}
+	// render_3d_projected_walls(manager);
+	rendering_3d_walls(manager);
 }
 
 void	render_3d_projected_walls(t_cub_manager* manager)
@@ -527,6 +536,28 @@ void	render_3d_projected_walls(t_cub_manager* manager)
 
 		draw_full_rect(i * WALL_STRIP_WIDTH, (HEIGHT / 2) - (wallSheight / 2), WALL_STRIP_WIDTH, wallSheight, (i * WALL_STRIP_WIDTH) + WALL_STRIP_WIDTH, ((HEIGHT / 2) - (wallSheight / 2)) + wallSheight, manager, 0xffffff);
 	}
+}
+
+void	rendering_3d_walls(t_cub_manager* manager)
+{
+	    for (int i = 0; i < NUMBER_OF_RAYS; i++) {
+        float perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
+        float distanceProjPlane = (WIDTH / 2) / tan(radians(FOV) / 2);
+        float projectedWallHeight = (TILE_SIZE / perpDistance) * distanceProjPlane;
+
+        int wallStripHeight = (int)projectedWallHeight;
+
+        int wallTopPixel = (HEIGHT / 2) - (wallStripHeight / 2);
+        wallTopPixel = wallTopPixel < 0 ? 0 : wallTopPixel;
+
+        int wallBottomPixel = (HEIGHT / 2) + (wallStripHeight / 2);
+        wallBottomPixel = wallBottomPixel > HEIGHT ? HEIGHT : wallBottomPixel;
+
+        // render the wall from wallTopPixel to wallBottomPixel
+        for (int y = wallTopPixel; y < wallBottomPixel; y++) {
+			cub_mlx_pixel_put(&manager->mlx_manager.img_data, i, y, WIDTH, HEIGHT, 0xffffff);
+        }
+    }
 }
 
 int render(t_map_manager *map_manager)
@@ -549,7 +580,7 @@ int render(t_map_manager *map_manager)
 	{
 		for (int j = 0;j < manager.map->map_width;++j)
 		{
-			if (j < ft_strlen(manager.map->map[i]))
+			if (j < (int) ft_strlen(manager.map->map[i]))
 				map[i][j] = manager.map->map[i][j];
 			else
 				map[i][j] = ' ';
@@ -587,6 +618,7 @@ int render(t_map_manager *map_manager)
 	manager.mlx_manager.mlx_window = mlx_new_window(manager.mlx_manager.mlx, WIDTH, HEIGHT, "cub3D");
 	manager.mlx_manager.img_data.img = mlx_new_image(manager.mlx_manager.mlx, WIDTH, HEIGHT);
 	manager.mlx_manager.img_data.addr = mlx_get_data_addr(manager.mlx_manager.img_data.img, &manager.mlx_manager.img_data.bits_per_pixel, &manager.mlx_manager.img_data.line_length, &manager.mlx_manager.img_data.endian);
+	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	draw(&manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
 	mlx_loop(manager.mlx_manager.mlx);
