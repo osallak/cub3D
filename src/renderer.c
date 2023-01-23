@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/23 12:16:49 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/23 18:13:39 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -314,6 +314,7 @@ int draw(t_cub_manager *manager)
 	// double	dist;
 	clear_window(manager, 0x00000000, WIDTH, HEIGHT);
 	// double	height;
+	cast_all_rays(manager);
 	draw_empty_rect(0, 0, 10 * mini_x, 6 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
 	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
 	// double mapex = manager->player.x + 5.0 * TILE_SIZE;
@@ -326,7 +327,7 @@ int draw(t_cub_manager *manager)
 			int x = (mapsy + i) / TILE_SIZE;
 			int y = (mapsx + j) / TILE_SIZE;
 			if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
-				cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, mini_x * 10, mini_y * 6, 0x00ffffff);
+				cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, mini_x * 10, mini_y * 6, 0x0029af00);
 		}
 	}
 
@@ -334,7 +335,7 @@ int draw(t_cub_manager *manager)
 	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
 	angle = manager->player.rotation_angle - (radians(FOV / 2.0));
 	num_of_rays = WIDTH / (double) (WALL_STRIP_WIDTH);
-	cast_all_rays(manager);
+
 	mlx_put_image_to_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->mlx_manager.img_data.img, 0, 0);
 	return 0;
 }
@@ -352,9 +353,27 @@ bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
 	if (isfacingup == true)
 		y -= 1;
 	if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
-		return (true);
+		return (false);
 	x_index = x / TILE_SIZE;
 	y_index = y / TILE_SIZE;
+	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
+		return (false);
+	return (manager->map->map[y_index][x_index] != '0'
+		&& !ft_strchr(PLAYER_CHAR, manager->map->map[y_index][x_index]));
+}
+bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
+{
+	int	x_index;
+	int	y_index;
+
+	if (isfacingleft == true)
+		x -= 1;
+	if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
+		return (false);
+	x_index = x / TILE_SIZE;
+	y_index = y / TILE_SIZE;
+	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
+		return (false);
 	return (manager->map->map[y_index][x_index] != '0'
 		&& !ft_strchr(PLAYER_CHAR, manager->map->map[y_index][x_index]));
 }
@@ -372,7 +391,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	// double horz_wall_color = 0;
 	
 	//fid the y-coordinates of the closest horiz grid intersection
-	yintercept = (floor(manager->player.y) / TILE_SIZE) * (double)TILE_SIZE;
+	yintercept = (floor(manager->player.y / TILE_SIZE)) * (double)TILE_SIZE;
 	if (ray->isRayFacingDown)
 		yintercept += TILE_SIZE;
 	
@@ -392,7 +411,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 
 	
     // Increment xstep and ystep until we find a wall
-	while (next_horz_touch_x >= 0 && next_horz_touch_x < WIDTH && next_horz_touch_x >= 0 && next_horz_touch_y < HEIGHT)
+	while (next_horz_touch_x >= 0 && next_horz_touch_x < WIDTH && next_horz_touch_y >= 0 && next_horz_touch_y < HEIGHT)
 	{
 		if (__inside_wall(next_horz_touch_x, next_horz_touch_y, ray->isRayFacingUp, manager))
 		{
@@ -413,7 +432,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	double ver_hit_y = 0;
 	//don't forget the color
 	
-	xintercept = (floor(manager->player.x) / TILE_SIZE) * TILE_SIZE;
+	xintercept = (floor(manager->player.x / TILE_SIZE)) * TILE_SIZE;
 	if (ray->isRayFacingRight)
 		xintercept += TILE_SIZE;
 	yintercept = manager->player.y + (xintercept - manager->player.x) * tan(ray->rayAngle);
@@ -432,7 +451,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	
 	while (next_ver_touch_x >= 0 && next_ver_touch_x < WIDTH && next_ver_touch_y >= 0 && next_ver_touch_y < HEIGHT)
 	{
-		if (__inside_wall(next_ver_touch_x, next_ver_touch_y, ray->isRayFacingUp, manager))
+		if (__inside_wall_ver(next_ver_touch_x, next_ver_touch_y, ray->isRayFacingLeft, manager))
 		{
 			found_ver_hit = true;
 			ver_hit_x = next_ver_touch_x;
@@ -449,34 +468,48 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	
 	double horz_hit_distance = 0.0;
 	double vert_hit_distance = 0.0;
-	if (found_horz_wall_hit)
-		horz_hit_distance = __distance(manager->player.x, manager->player.y, horz_wall_hit_x, horz_wall_hit_y);
-	else
-		horz_hit_distance = 3.4E+38;//double max value
-	if (found_ver_hit)
-		vert_hit_distance = __distance(manager->player.x, manager->player.y, ver_hit_x, ver_hit_y);
-	else
-		vert_hit_distance = 3.4E+38;//double max value
+	// if (found_horz_wall_hit)
+		horz_hit_distance = hypot(manager->player.x - horz_wall_hit_x, manager->player.y - horz_wall_hit_y);
+	// else
+	// 	horz_hit_distance = 3.4E+38;//double max value
+	// if (found_ver_hit)
+		vert_hit_distance = hypot(manager->player.x - ver_hit_x, manager->player.y - ver_hit_y);
+	// else
+	// 	vert_hit_distance = 3.4E+38;//double max value
 	
 	printf("ver_dis: %f\thor_dis: %f       (renderer.c:461)\n", vert_hit_distance, horz_hit_distance);
-	if (vert_hit_distance < horz_hit_distance)
+	if (found_horz_wall_hit && found_ver_hit)
 	{
-		ray->wallHitX = ver_hit_x;
-		ray->wallHitY = ver_hit_y;
-		ray->distance = vert_hit_distance;
-		//assing the color
-		ray->wasHitVertical = true;
+		if (horz_hit_distance < vert_hit_distance)
+		{
+			ray->wallHitX = horz_wall_hit_x;
+			ray->wallHitY = horz_wall_hit_y;
+			ray->distance = horz_hit_distance;	
+		}
+		else
+		{
+			ray->wallHitX = ver_hit_x;
+			ray->wallHitY = ver_hit_y;
+			ray->distance = vert_hit_distance;	
+		}
+		printf("bjoj\n");
 	}
-	else
+	else if (found_horz_wall_hit)
 	{
 		ray->wallHitX = horz_wall_hit_x;
 		ray->wallHitY = horz_wall_hit_y;
 		ray->distance = horz_hit_distance;
-		//assing the color
-		ray->wasHitVertical = false;
+		printf("horz\n");	
+	}
+	else if (found_ver_hit)
+	{
+		printf("ver\n");
+		ray->wallHitX = ver_hit_x;
+		ray->wallHitY = ver_hit_y;
+		ray->distance = vert_hit_distance;		
 	}
 	// printf("")
-	// printf("x0: %f, y0: %f, x1: %f, y1: %f,    (renderer.c:478)\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
+	printf("x0: %f, y0: %f, x1: %f, y1: %f\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
 	// draw_line(manager->player.x * SCALING_FACTOR, manager->player.y * SCALING_FACTOR, ray->wallHitX * SCALING_FACTOR, ray->wallHitY, 0, 0, manager, 0xff0000);
 }
 
@@ -508,7 +541,7 @@ void	cast_all_rays(t_cub_manager* manager)
 
 	// manager->rays = (t_ray *)malloc(NUMBER_OF_RAYS * sizeof(t_ray));//TODO allocate needed memory for each ray before calling this funcition
 	angle_increment = radians(FOV) / NUMBER_OF_RAYS;
-	ray_angle = manager->player.rotation_angle - (radians(FOV) / 2);
+	ray_angle = manager->player.rotation_angle - (radians(FOV) / 2.0);
 	i = -1;
 	while (++i < NUMBER_OF_RAYS)
 	{
@@ -522,31 +555,32 @@ void	cast_all_rays(t_cub_manager* manager)
 	rendering_3d_walls(manager);
 }
 
-void	render_3d_projected_walls(t_cub_manager* manager)
-{
-	t_ray	ray;
-	int		i;
+// void	render_3d_projected_walls(t_cub_manager* manager)
+// {
+// 	t_ray	ray;
+// 	int		i;
 
-	i = -1;
-	double disProj = (WIDTH / 2) / tan(radians(FOV) / 2);
-	while (++i < NUMBER_OF_RAYS)
-	{
-		ray = manager->rays[i];
-		double correctWallDistance = ray.distance * cos(ray.rayAngle - manager->player.rotation_angle);
-		double wallSheight = (TILE_SIZE / correctWallDistance) * disProj;
-		//colors
+// 	i = -1;
+// 	double disProj = (WIDTH / 2) / tan(radians(FOV) / 2);
+// 	while (++i < NUMBER_OF_RAYS)
+// 	{
+// 		ray = manager->rays[i];
+// 		double correctWallDistance = ray.distance * cos(ray.rayAngle - manager->player.rotation_angle);
+// 		double wallSheight = (TILE_SIZE / correctWallDistance) * disProj;
+// 		//colors
 
-		draw_full_rect(i * WALL_STRIP_WIDTH, (HEIGHT / 2) - (wallSheight / 2), WALL_STRIP_WIDTH, wallSheight, WIDTH, HEIGHT, manager, 0xffffff); // lx and ly in this function are used to not go beyond the drawing area limits
-	}
-}
+// 		draw_full_rect(i * WALL_STRIP_WIDTH, (HEIGHT / 2) - (wallSheight / 2), WALL_STRIP_WIDTH, wallSheight, WIDTH, HEIGHT, manager, 0xffffff); // lx and ly in this function are used to not go beyond the drawing area limits
+// 	}
+// }
 
 void	rendering_3d_walls(t_cub_manager* manager)
 {
 	    for (int i = 0; i < NUMBER_OF_RAYS; i++) {
 			// printf("distance: %f\n", manager->rays[i].distance);
         double perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
-        double distanceProjPlane = (WIDTH / 2) / tan(radians(FOV) / 2);
-        double projectedWallHeight = (double)((double)TILE_SIZE / perpDistance) * distanceProjPlane;
+		// printf("%lf, %lf, (%s:%d)\n", manager->rays[i].distance, cos(manager->rays[i].rayAngle - manager->player.rotation_angle), __FILE__, __LINE__);
+        double distanceProjPlane = (WIDTH / 2.0) / tan(radians(FOV) / 2.0);
+        double projectedWallHeight = ((double)TILE_SIZE / perpDistance) * distanceProjPlane;
 
         int wallStripHeight = (int)projectedWallHeight;
 
@@ -557,9 +591,10 @@ void	rendering_3d_walls(t_cub_manager* manager)
         wallBottomPixel = wallBottomPixel > HEIGHT ? HEIGHT : wallBottomPixel;
 
         // render the wall from wallTopPixel to wallBottomPixel
-        for (int y = wallTopPixel; y < wallBottomPixel; y++) {
-			cub_mlx_pixel_put(&manager->mlx_manager.img_data, i, y, WIDTH, HEIGHT, 0xffffff);
-        }
+        for (int j = wallTopPixel; j < wallBottomPixel;++j)
+		{
+			cub_mlx_pixel_put(&manager->mlx_manager.img_data, i * WALL_STRIP_WIDTH, j, WIDTH, HEIGHT, 0x00ffffff);
+		}
     }
 }
 
