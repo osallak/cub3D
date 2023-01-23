@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   renderer.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/22 20:59:32 by osallak          ###   ########.fr       */
+/*   Updated: 2023/01/23 12:16:49 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -372,7 +372,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	// double horz_wall_color = 0;
 	
 	//fid the y-coordinates of the closest horiz grid intersection
-	yintercept = (floor(manager->player.y) / TILE_SIZE) * TILE_SIZE;
+	yintercept = (floor(manager->player.y) / TILE_SIZE) * (double)TILE_SIZE;
 	if (ray->isRayFacingDown)
 		yintercept += TILE_SIZE;
 	
@@ -385,7 +385,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	if (ray->isRayFacingLeft && xstep > 0)
 		xstep *= -1;
 	if (ray->isRayFacingRight && xstep < 0)
-		xstep = -xstep;
+		xstep *= -1;
 		
 	double next_horz_touch_x = xintercept;
 	double next_horz_touch_y = yintercept;
@@ -536,7 +536,7 @@ void	render_3d_projected_walls(t_cub_manager* manager)
 		double wallSheight = (TILE_SIZE / correctWallDistance) * disProj;
 		//colors
 
-		draw_full_rect(i * WALL_STRIP_WIDTH, (HEIGHT / 2) - (wallSheight / 2), WALL_STRIP_WIDTH, wallSheight, (i * WALL_STRIP_WIDTH) + WALL_STRIP_WIDTH, ((HEIGHT / 2) - (wallSheight / 2)) + wallSheight, manager, 0xffffff);
+		draw_full_rect(i * WALL_STRIP_WIDTH, (HEIGHT / 2) - (wallSheight / 2), WALL_STRIP_WIDTH, wallSheight, WIDTH, HEIGHT, manager, 0xffffff); // lx and ly in this function are used to not go beyond the drawing area limits
 	}
 }
 
