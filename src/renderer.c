@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/23 18:28:09 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/23 20:52:04 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -389,7 +389,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	// double horz_wall_color = 0;
 	
 	//fid the y-coordinates of the closest horiz grid intersection
-	yintercept = (floor(manager->player.y / TILE_SIZE)) * (double)TILE_SIZE;
+	yintercept = floor(manager->player.y / TILE_SIZE) * (double)TILE_SIZE;
 	if (ray->isRayFacingDown)
 		yintercept += TILE_SIZE;
 	
