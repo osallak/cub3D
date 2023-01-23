@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/23 18:13:39 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/23 18:28:09 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -358,8 +358,7 @@ bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
 		return (false);
-	return (manager->map->map[y_index][x_index] != '0'
-		&& !ft_strchr(PLAYER_CHAR, manager->map->map[y_index][x_index]));
+	return (manager->map->map[y_index][x_index] == '1');
 }
 bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 {
@@ -374,8 +373,7 @@ bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
 		return (false);
-	return (manager->map->map[y_index][x_index] != '0'
-		&& !ft_strchr(PLAYER_CHAR, manager->map->map[y_index][x_index]));
+	return (manager->map->map[y_index][x_index] == '1');
 }
 
 void	cast(t_ray* ray, t_cub_manager* manager)
