@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/23 20:52:04 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/24 12:41:11 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -352,8 +352,6 @@ bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
 
 	if (isfacingup == true)
 		y -= 1;
-	if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
-		return (false);
 	x_index = x / TILE_SIZE;
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
@@ -367,8 +365,6 @@ bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 
 	if (isfacingleft == true)
 		x -= 1;
-	if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
-		return (false);
 	x_index = x / TILE_SIZE;
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
@@ -409,7 +405,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 
 	
     // Increment xstep and ystep until we find a wall
-	while (next_horz_touch_x >= 0 && next_horz_touch_x < WIDTH && next_horz_touch_y >= 0 && next_horz_touch_y < HEIGHT)
+	while (next_horz_touch_x >= 0 && next_horz_touch_x < manager->map->map_width * TILE_SIZE && next_horz_touch_y >= 0 && next_horz_touch_y < manager->map->map_height * TILE_SIZE)
 	{
 		if (__inside_wall(next_horz_touch_x, next_horz_touch_y, ray->isRayFacingUp, manager))
 		{
@@ -417,8 +413,10 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 			horz_wall_hit_x = next_horz_touch_x;
 			horz_wall_hit_y = next_horz_touch_y;
 			// horz_wall_color = content; //don't forget that
+			// printf("found horizontal wall\n-----------------------------------\n\n");
 			break ;
 		}
+		// printf("nexthx: %lf nexhy: %lf (%s:%d)\n-------------------\n", next_horz_touch_x, next_horz_touch_y, __FILE__, __LINE__);
 		next_horz_touch_x += xstep;
 		next_horz_touch_y += ystep;
 	}
@@ -430,7 +428,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	double ver_hit_y = 0;
 	//don't forget the color
 	
-	xintercept = (floor(manager->player.x / TILE_SIZE)) * TILE_SIZE;
+	xintercept = floor(manager->player.x / TILE_SIZE) * TILE_SIZE;
 	if (ray->isRayFacingRight)
 		xintercept += TILE_SIZE;
 	yintercept = manager->player.y + (xintercept - manager->player.x) * tan(ray->rayAngle);
@@ -447,7 +445,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	double next_ver_touch_x = xintercept;
 	double next_ver_touch_y = yintercept;
 	
-	while (next_ver_touch_x >= 0 && next_ver_touch_x < WIDTH && next_ver_touch_y >= 0 && next_ver_touch_y < HEIGHT)
+	while (next_ver_touch_x >= 0 && next_ver_touch_x <manager->map->map_width * TILE_SIZE && next_ver_touch_y >= 0 && next_ver_touch_y < manager->map->map_height * TILE_SIZE)
 	{
 		if (__inside_wall_ver(next_ver_touch_x, next_ver_touch_y, ray->isRayFacingLeft, manager))
 		{
@@ -455,8 +453,10 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 			ver_hit_x = next_ver_touch_x;
 			ver_hit_y = next_ver_touch_y;
 			//get the color here
+			// printf("found vertical wall\n-----------------------------------\n");
 			break ;
 		}
+		// printf("nextvx: %lf nexvy: %lf (%s:%d)\n-------------------\n", next_ver_touch_x, next_ver_touch_y, __FILE__, __LINE__);
 		next_ver_touch_x += xstep;
 		next_ver_touch_y += ystep;
 	}
@@ -475,7 +475,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	// else
 	// 	vert_hit_distance = 3.4E+38;//double max value
 	
-	printf("ver_dis: %f\thor_dis: %f       (renderer.c:461)\n", vert_hit_distance, horz_hit_distance);
+	// printf("ver_dis: %f\thor_dis: %f       (renderer.c:461)\n", vert_hit_distance, horz_hit_distance);
 	if (found_horz_wall_hit && found_ver_hit)
 	{
 		if (horz_hit_distance < vert_hit_distance)
@@ -490,24 +490,24 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 			ray->wallHitY = ver_hit_y;
 			ray->distance = vert_hit_distance;	
 		}
-		printf("bjoj\n");
+		// printf("bjoj\n");
 	}
 	else if (found_horz_wall_hit)
 	{
 		ray->wallHitX = horz_wall_hit_x;
 		ray->wallHitY = horz_wall_hit_y;
 		ray->distance = horz_hit_distance;
-		printf("horz\n");	
+		// printf("horz\n");	
 	}
 	else if (found_ver_hit)
 	{
-		printf("ver\n");
+		// printf("ver\n");
 		ray->wallHitX = ver_hit_x;
 		ray->wallHitY = ver_hit_y;
 		ray->distance = vert_hit_distance;		
 	}
 	// printf("")
-	printf("x0: %f, y0: %f, x1: %f, y1: %f\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
+	// printf("x0: %f, y0: %f, x1: %f, y1: %f\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
 	// draw_line(manager->player.x * SCALING_FACTOR, manager->player.y * SCALING_FACTOR, ray->wallHitX * SCALING_FACTOR, ray->wallHitY, 0, 0, manager, 0xff0000);
 }
 
