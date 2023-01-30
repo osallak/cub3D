@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/24 11:55:02 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/30 11:33:59 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,10 +48,10 @@ typedef struct	s_img_data {
 
 typedef struct s_quadri_long
 {
-	long	end;
-	long	left;
-	long	right;
-	long	bbegin;
+	long	a;
+	long	b;
+	long	c;
+	long	d;
 }	t_quadri_long;
 
 enum {
@@ -63,6 +63,35 @@ enum {
 	ON_EXPOSE = 12,
 	ON_DESTROY = 17
 };
+
+typedef struct s_pair_double
+{
+	double	x;
+	double	y;
+}	t_pair_double;
+
+typedef struct s_draw_point_struct
+{
+	t_pair_double	point;
+	t_pair_double	limits;
+	int				color;
+}	t_draw_point_struct;
+
+typedef struct s_draw_lines_struct
+{
+	t_pair_double	start;
+	t_pair_double	end;
+	t_pair_double	limits;
+	int				color;
+}	t_draw_lines_struct;
+
+typedef struct s_draw_circle
+{
+	t_pair_double   center;
+    double        	radius;
+	t_pair_double	limits;
+	int				color;
+}	t_draw_circle;
 
 typedef struct s_map_manager
 {

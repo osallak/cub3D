@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/05 18:11:55 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/05 13:23:20 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/30 12:08:40 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ static int	ft_check_table(char **ptr, int start, int end, int index)
 
 static void	ft_complete(char *s, char	**splitted, char c)
 {
-	size_t	i;
+	long long	i;
 	int		index;
 	int		j;
 
@@ -94,7 +94,7 @@ char	**ft_split(char *s, char c)
 
 	if (!s)
 		return (0x0);
-	splitted = malloc((sizeof(char *) * (count_rows(s, c) + 1)));
+	splitted = malloc((sizeof(char *) * count_rows(s, c) + sizeof(char *)));
 	if (!splitted)
 		return (0x0);
 	ft_complete(s, splitted, c);

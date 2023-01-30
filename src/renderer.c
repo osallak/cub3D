@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/24 12:41:11 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/30 12:13:09 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,14 +27,14 @@ inline double dist(int x1, int x2, int y1, int y2)
                 + pow(y2 - y1, 2) * 1.0);
 }
 
-void	cub_mlx_pixel_put(t_img_data *data, int x, int y, int limit_x, int limit_y, int color)
+void	cub_mlx_pixel_put(t_img_data *data, t_draw_point_struct p)
 {
 	char	*dst;
 
-	if (x < 0 || x >= limit_x || y < 0 || y >= limit_y)
+	if (p.point.x < 0 || p.point.x >= p.limits.x || p.point.y < 0 || p.point.y >= p.limits.y)
 		return ;
-	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
-	*(unsigned int*)dst = color;
+	dst = data->addr + ((int)p.point.y * data->line_length + (int)p.point.x * (data->bits_per_pixel / 8));
+	*(unsigned int*)dst = p.color;
 }
 
 int max(int a, int b)
@@ -52,11 +52,11 @@ int min(int a, int b)
 	    return a;
 }
 
-void draw_line(double x0, double y0, double x1, double y1, int lx, int ly, t_cub_manager *manager, int color)
+void draw_line(t_cub_manager *manager, t_draw_lines_struct lines)
 {
   // Calculate the difference between the starting and ending x and y coordinates
-  double dx = x1 - x0;
-  double dy = y1 - y0;
+  double dx = lines.end.x - lines.start.x;
+  double dy = lines.end.y - lines.start.y;
 
   // Determine the number of steps required to draw the line
   double steps = fabs(dx) > fabs(dy) ? fabs(dx) : fabs(dy);
@@ -67,17 +67,19 @@ void draw_line(double x0, double y0, double x1, double y1, int lx, int ly, t_cub
   double yIncrement = dy / (steps);
 
   // Set the starting x and y coordinates
-  double x = x0;
-  double y = y0;
-
+  t_draw_point_struct coor;
+  coor.point.x = lines.start.x;
+  coor.point.y = lines.start.y;
+  coor.limits = lines.limits;
+  coor.color = lines.color;
   // Loop through the number of steps required to draw the line
   for (int i = 0; i <= st; ++i) {
     // Set the color of the pixel at (x, y)
-    cub_mlx_pixel_put(&manager->mlx_manager.img_data ,round(x), round(y), lx, ly, color);
+    cub_mlx_pixel_put(&manager->mlx_manager.img_data, coor);
 
     // Increment the x and y coordinates
-    x += xIncrement;
-    y += yIncrement;
+    coor.point.x += xIncrement;
+    coor.point.y += yIncrement;
   }
 }
 
@@ -90,52 +92,26 @@ void normalize_angle(double *ang)
 		*ang += 2 * M_PI;
 }
 
-typedef struct s_dpair
-{
-	double x;
-	double y;
-	struct s_dpair *next;
-}	t_dpair;
-
-t_dpair *create_dpair(double x, double y)
-{
-	t_dpair *dpair = (t_dpair *)malloc(sizeof(t_dpair));
-	if (!dpair)
-		exit(1);
-	dpair->x = x;
-    dpair->y = y;
-	dpair->next = 0x0;
-	return dpair;
-}
-
-void	dpair_add_back(t_dpair **head, t_dpair *new)
-{
-	if (!head || !new)
-		return ;
-	if (!*head)
-		*head = new;
-	else
-	{
-		t_dpair *p = *head;
-		while (p->next)
-		{
-			p = p->next;
-		}
-		p->next = new;
-	}	
-}
-
 void clear_window(t_cub_manager * manager, int color, int lx, int ly)
 {
-	int i = -1;
-	while (++i < ly)
+	int tmp;
+
+	t_draw_point_struct p;
+	tmp = p.point.x;
+	p.point.x = 0;
+	p.point.y = 0;
+	p.color = color;
+	p.limits.x = lx;
+	p.limits.y = ly;
+	while (p.point.y < ly)
 	{
-		int j = -1;
-		while (++j < lx)
+		p.point.x = tmp;
+		while (p.point.x < lx)
 		{
-			cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, lx, ly, color);
+			cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
+			++p.point.x;
 		}
-		
+		++p.point.y;
 	}
 }
 
@@ -167,19 +143,30 @@ long	get_map_height(t_map_manager *map_manager)
 	return (i);
 }
 
-void	draw_full_rect(int x, int y, int width, int height, int lx, int ly, t_cub_manager *manager, int color)
+void	draw_full_rect(t_cub_manager *manager, t_draw_lines_struct lines)
 {
-	int i = -1;
-	while(++i < height)
-		draw_line(x , y + i, x + width, y + i, lx, ly, manager, color);
+	int i;
+
+	i = -1;
+	while(++i < lines.end.y)
+	{
+		// draw_line(x , y + i, x + width, y + i, lx, ly, manager, color);
+		lines.start.y += i;
+		// lines.end.x += width;
+		lines.end.y += i;
+	}
 }
 
-void	draw_empty_rect(int x, int y, int width, int height, int lx, int ly, t_cub_manager *manager, int color)
+void	draw_empty_rect(t_cub_manager *manager, t_draw_lines_struct lines)
 {
-	draw_line(x, y, x + width, y, lx, ly, manager, color);
-	draw_line(x, y, x, y + height, lx, ly, manager, color);
-	draw_line(x, y + height, x + width, y + height,lx, ly, manager, color);
-	draw_line(x + width, y, x + width, y + height,lx, ly, manager, color);
+	draw_line(manager, lines);
+	draw_line(manager, lines);
+	draw_line(manager, lines);
+	draw_line(manager, lines);
+	// draw_line(x, y, x + width, y, lx, ly, manager, color);
+	// draw_line(x, y, x, y + height, lx, ly, manager, color);
+	// draw_line(x, y + height, x + width, y + height,lx, ly, manager, color);
+	// draw_line(x + width, y, x + width, y + height,lx, ly, manager, color);
 }
 
 int controls(int key, t_cub_manager	*manager)
@@ -205,7 +192,7 @@ int controls(int key, t_cub_manager	*manager)
 		manager->player.walk_direction = -1;
 		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
-		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fy / TILE_SIZE < ft_strlen(manager->map->map[(int)fy / TILE_SIZE]) && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
+		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
 		{	
 			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
@@ -219,7 +206,7 @@ int controls(int key, t_cub_manager	*manager)
 		manager->player.walk_direction = 1;
 		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
-		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fy / TILE_SIZE < ft_strlen(manager->map->map[(int)fy / TILE_SIZE]) && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
+		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
 		{	
 			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
@@ -259,52 +246,18 @@ int controls(int key, t_cub_manager	*manager)
 # define mini_x 30
 # define mini_y 30
 
-void	draw_empty_circle(double x, double y, double radius, int lx, int ly, t_cub_manager *manager, int color)
+void	draw_empty_circle(t_cub_manager *manager, t_draw_circle c)
 {
+	t_draw_point_struct p;
+	p.point.x = c.center.x;
+	p.point.y = c.center.y;
+	p.color = c.color;
 	for (int i = 0;i < 360;++i)
 	{
-		cub_mlx_pixel_put(&manager->mlx_manager.img_data, x + radius * cos(radians(i)), y + radius * sin(radians(i)), lx, ly, color);
+		// cub_mlx_pixel_put(&manager->mlx_manager.img_data, c.center.x + c.radius * cos(radians(i)), y + radius * sin(radians(i)), lx, ly, color);
+		cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
 	}
 }
-
-
-// void drawMinimap(int map[][MAP_WIDTH], int playerX, int playerY) {
-//     int minimap[MINIMAP_SIZE][MINIMAP_SIZE];
-//     int minimapStartX = playerX - (MINIMAP_SIZE / 2);
-//     int minimapStartY = playerY - (MINIMAP_SIZE / 2);
-//     int minimapEndX = minimapStartX + MINIMAP_SIZE;
-//     int minimapEndY = minimapStartY + MINIMAP_SIZE;
-
-//     // Clear the minimap
-//     for (int i = 0; i < MINIMAP_SIZE; i++) {
-//         for (int j = 0; j < MINIMAP_SIZE; j++) {
-//             minimap[i][j] = 0;
-//         }
-//     }
-
-//     // Copy the relevant section of the map to the minimap
-//     for (int i = minimapStartY; i < minimapEndY; i++) {
-//         for (int j = minimapStartX; j < minimapEndX; j++) {
-//             int minimapX = j - minimapStartX;
-//             int minimapY = i - minimapStartY;
-//             if (i >= 0 && i < MAP_HEIGHT && j >= 0 && j < MAP_WIDTH) {
-//                 minimap[minimapY][minimapX] = map[i][j];
-//             }
-//         }
-//     }
-
-//     // Draw the minimap
-//     for (int i = 0; i < MINIMAP_SIZE; i++) {
-//         for (int j = 0; j < MINIMAP_SIZE; j++) {
-//             if (minimap[i][j] == 1) {
-//                 printf("#");
-//             } else {
-//                 printf(".");
-//             }
-//         }
-//         printf("\n");
-//     }
-// }
 
 int draw(t_cub_manager *manager)
 {
@@ -315,27 +268,27 @@ int draw(t_cub_manager *manager)
 	clear_window(manager, 0x00000000, WIDTH, HEIGHT);
 	// double	height;
 	cast_all_rays(manager);
-	draw_empty_rect(0, 0, 10 * mini_x, 6 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
+	// draw_empty_rect(manager, (t_draw_lines_struct){{0,0},{10 * mini_x, 6 * mini_y}, {WIDTH, HEIGHT}, 0x00ffffff});
+	// draw_empty_rect(0, 0, 10 * mini_x, 6 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
 	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
 	// double mapex = manager->player.x + 5.0 * TILE_SIZE;
 	double mapsy = manager->player.y - 3.0 * TILE_SIZE;
 	// double mapey = manager->player.y + 3.0 * TILE_SIZE;
-	for (int i = 0;i < mini_y * 6;++i)
-	{
-		for (int j = 0;j < mini_x * 10;++j)
-		{
-			int x = (mapsy + i) / TILE_SIZE;
-			int y = (mapsx + j) / TILE_SIZE;
-			if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
-				cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, mini_x * 10, mini_y * 6, 0x0029af00);
-		}
-	}
+	// for (int i = 0;i < mini_y * 6;++i)
+	// {
+	// 	for (int j = 0;j < mini_x * 10;++j)
+	// 	{
+	// 		int x = (mapsy + i) / TILE_SIZE;
+	// 		int y = (mapsx + j) / TILE_SIZE;
+	// 		if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
+	// 			cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, mini_x * 10, mini_y * 6, 0x0029af00);
+	// 	}
+	// }
 
-	draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
+	// draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
 	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
 	angle = manager->player.rotation_angle - (radians(FOV / 2.0));
 	num_of_rays = WIDTH / (double) (WALL_STRIP_WIDTH);
-
 	mlx_put_image_to_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->mlx_manager.img_data.img, 0, 0);
 	return 0;
 }
@@ -553,26 +506,12 @@ void	cast_all_rays(t_cub_manager* manager)
 	rendering_3d_walls(manager);
 }
 
-// void	render_3d_projected_walls(t_cub_manager* manager)
-// {
-// 	t_ray	ray;
-// 	int		i;
-
-// 	i = -1;
-// 	double disProj = (WIDTH / 2) / tan(radians(FOV) / 2);
-// 	while (++i < NUMBER_OF_RAYS)
-// 	{
-// 		ray = manager->rays[i];
-// 		double correctWallDistance = ray.distance * cos(ray.rayAngle - manager->player.rotation_angle);
-// 		double wallSheight = (TILE_SIZE / correctWallDistance) * disProj;
-// 		//colors
-
-// 		draw_full_rect(i * WALL_STRIP_WIDTH, (HEIGHT / 2) - (wallSheight / 2), WALL_STRIP_WIDTH, wallSheight, WIDTH, HEIGHT, manager, 0xffffff); // lx and ly in this function are used to not go beyond the drawing area limits
-// 	}
-// }
-
 void	rendering_3d_walls(t_cub_manager* manager)
 {
+	t_draw_point_struct p;
+	p.limits.x = WIDTH;
+	p.limits.y = HEIGHT;
+	p.color = 0x00ffffff;
 	    for (int i = 0; i < NUMBER_OF_RAYS; i++) {
 			// printf("distance: %f\n", manager->rays[i].distance);
         double perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
@@ -591,7 +530,10 @@ void	rendering_3d_walls(t_cub_manager* manager)
         // render the wall from wallTopPixel to wallBottomPixel
         for (int j = wallTopPixel; j < wallBottomPixel;++j)
 		{
-			cub_mlx_pixel_put(&manager->mlx_manager.img_data, i * WALL_STRIP_WIDTH, j, WIDTH, HEIGHT, 0x00ffffff);
+			// cub_mlx_pixel_put(&manager->mlx_manager.img_data, i * WALL_STRIP_WIDTH, j, WIDTH, HEIGHT, 0x00ffffff);
+			p.point.x = i * WALL_STRIP_WIDTH;
+			p.point.y = j;
+			cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
 		}
     }
 }
@@ -630,7 +572,7 @@ int render(t_map_manager *map_manager)
 	while (++i < manager.map->map_height)
 	{
 		j = -1;
-		while (++j < (int) ft_strlen(manager.map->map[i]))
+		while (++j < manager.map->map_width)
 		{
 			if (ft_strchr(PLAYER_CHAR, manager.map->map[i][j]))
 			{

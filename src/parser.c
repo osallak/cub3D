@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/15 14:50:02 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/01/30 12:01:41 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,37 +227,37 @@ void	check_horizontal_path(char **map, long begin, long bbegin, long j)
 {
 	t_quadri_long	tmp;
 
-	tmp.left = begin;
-	tmp.end = get_end(map, j);
-	while (tmp.left >= bbegin && map[j][tmp.left] != '1')
+	tmp.a = begin;
+	tmp.c = get_end(map, j);
+	while (tmp.a >= bbegin && map[j][tmp.a] != '1')
 	{
-		if (map[j][tmp.left] == ' ')
+		if (map[j][tmp.a] == ' ')
 			break ;
-		--tmp.left;
+		--tmp.a;
 	}
-	if ((tmp.left >= bbegin
-			&& map[j][tmp.left] != '1') || tmp.left < bbegin)
+	if ((tmp.a >= bbegin
+			&& map[j][tmp.a] != '1') || tmp.a < bbegin)
 		panic("Error: invalid map");
-	tmp.right = begin;
-	while (tmp.right <= tmp.end && map[j][tmp.right] != '1')
+	tmp.b = begin;
+	while (tmp.b <= tmp.c && map[j][tmp.b] != '1')
 	{
-		if (map[j][tmp.right] == ' ')
+		if (map[j][tmp.b] == ' ')
 			break ;
-		++tmp.right;
+		++tmp.b;
 	}
-	if ((tmp.right <= tmp.end && tmp.right >= 0 && tmp.right < ft_strlen(map[j])
-			&& map[j][tmp.right] != '1') || tmp.right > tmp.end)
+	if ((tmp.b <= tmp.c && tmp.b >= 0 && tmp.b < ft_strlen(map[j])
+			&& map[j][tmp.b] != '1') || tmp.b > tmp.c)
 		panic("Error: invalid map");
 }
 
 void	_norm_check_vertical_path(t_quadri_long *tmp, long begin, char **map)
 {
-	while (tmp->left > -1 && map[tmp->left]
-		&& begin < ft_strlen(map[tmp->left]) && map[tmp->left][begin] != '1')
+	while (tmp->a > -1 && map[tmp->a]
+		&& begin < ft_strlen(map[tmp->a]) && map[tmp->a][begin] != '1')
 	{
-		if (map[tmp->left][begin] == ' ')
+		if (map[tmp->a][begin] == ' ')
 			break ;
-		--tmp->left;
+		--tmp->a;
 	}
 }
 
@@ -265,24 +265,24 @@ void	check_vertical_path(char **map, long begin, long map_lines, long j)
 {
 	t_quadri_long	tmp;
 
-	tmp.left = j;
+	tmp.a = j;
 	_norm_check_vertical_path(&tmp, begin, map);
-	if ((tmp.left >= 0 && begin < ft_strlen(map[tmp.left])
-			&& map[tmp.left][begin] != '1')
-				|| tmp.left < 0 || begin > ft_strlen(map[tmp.left]))
+	if ((tmp.a >= 0 && begin < ft_strlen(map[tmp.a])
+			&& map[tmp.a][begin] != '1')
+				|| tmp.a < 0 || begin > ft_strlen(map[tmp.a]))
 		panic("Error: invalid map");
-	tmp.right = j;
-	while (tmp.right - 1 < map_lines
-		&& begin < ft_strlen(map[tmp.right])
-		&& map[tmp.right] && map[tmp.right][begin] != '1')
+	tmp.b = j;
+	while (tmp.b - 1 < map_lines
+		&& begin < ft_strlen(map[tmp.b])
+		&& map[tmp.b] && map[tmp.b][begin] != '1')
 	{
-		if (map[tmp.right][begin] == ' ')
+		if (map[tmp.b][begin] == ' ')
 			break ;
-		++tmp.right;
+		++tmp.b;
 	}
-	if ((tmp.right < map_lines && map[tmp.right]
-			&& begin < ft_strlen(map[tmp.right])
-			&& map[tmp.right][begin] != '1') || tmp.right >= map_lines)
+	if ((tmp.b < map_lines && map[tmp.b]
+			&& begin < ft_strlen(map[tmp.b])
+			&& map[tmp.b][begin] != '1') || tmp.b >= map_lines)
 		panic("Error: invalid map");
 }
 
@@ -291,20 +291,20 @@ void	check_validity_of_map(char **map, unsigned int map_lines)
 	long			begin;
 	t_quadri_long	tmp;
 
-	tmp.left = -1;
+	tmp.a = -1;
 	check_valid_space(map, map_lines);
-	while (map[++tmp.left])
+	while (map[++tmp.a])
 	{
-		tmp.right = -1;
-		tmp.end = get_end(map, tmp.left);
-		begin = get_begin(map, tmp.left);
-		tmp.bbegin = begin;
-		while (begin <= tmp.end)
+		tmp.b = -1;
+		tmp.c = get_end(map, tmp.a);
+		begin = get_begin(map, tmp.a);
+		tmp.d = begin;
+		while (begin <= tmp.c)
 		{
-			if (map[tmp.left][begin] != '1' && map[tmp.left][begin] != ' ')
+			if (map[tmp.a][begin] != '1' && map[tmp.a][begin] != ' ')
 			{
-				check_horizontal_path(map, begin, tmp.bbegin, tmp.left);
-				check_vertical_path(map, begin, map_lines, tmp.left);
+				check_horizontal_path(map, begin, tmp.d, tmp.a);
+				check_vertical_path(map, begin, map_lines, tmp.a);
 			}
 			++begin;
 		}
@@ -313,40 +313,40 @@ void	check_validity_of_map(char **map, unsigned int map_lines)
 
 void	_norm_check_map_character(t_quadri_long* tmp, char **map)
 {
-	tmp->bbegin = 1;
-	tmp->end = map[tmp->left][tmp->right];
+	tmp->d = 1;
+	tmp->c = map[tmp->a][tmp->b];
 }
 
 char	check_map_characters(char **map)
 {
 	t_quadri_long	tmp;
 
-	tmp.left = -1;
-	tmp.end = 0;
-	tmp.bbegin = 0;
-	while (map[++tmp.left])
+	tmp.a = -1;
+	tmp.c = 0;
+	tmp.d = 0;
+	while (map[++tmp.a])
 	{
-		tmp.right = -1;
-		while (++tmp.right < ft_strlen(map[tmp.left]))
+		tmp.b = -1;
+		while (++tmp.b < ft_strlen(map[tmp.a]))
 		{
-			if (!ft_strchr(VALID_CHARS, map[tmp.left][tmp.right]))
+			if (!ft_strchr(VALID_CHARS, map[tmp.a][tmp.b]))
 			{
-				printf("<%c>\n", map[tmp.left][tmp.right]);
+				printf("<%c>\n", map[tmp.a][tmp.b]);
 				panic("Error: invalid map char");
 			}
 			else
 			{
-				if (tmp.bbegin
-					&& ft_strchr(PLAYER_CHAR, map[tmp.left][tmp.right]))
+				if (tmp.d
+					&& ft_strchr(PLAYER_CHAR, map[tmp.a][tmp.b]))
 					panic("Error: invalid map");
-				if (ft_strchr(PLAYER_CHAR, map[tmp.left][tmp.right]))
+				if (ft_strchr(PLAYER_CHAR, map[tmp.a][tmp.b]))
 					_norm_check_map_character(&tmp, map);
 			}
 		}
 	}
-	if (tmp.end == 0)
+	if (tmp.c == 0)
 		panic("Error: invalid map");
-	return ((char) tmp.end);
+	return ((char) tmp.c);
 }
 
 
