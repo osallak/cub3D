@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/30 11:33:59 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/01 13:28:33 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,10 @@
 # define SCALING_FACTOR ((double)0.3)
 # define LINE_LENGTH (30)
 # define WIDTH 1080
+# define NORTH 0
+# define SOUTH 1 
+# define EAST 2
+# define WEST 3
 # define HEIGHT 720
 # define R_SPEED 5
 # define W_SPEED 5
@@ -93,6 +97,14 @@ typedef struct s_draw_circle
 	int				color;
 }	t_draw_circle;
 
+typedef struct s_texture
+{
+	int wi;
+	int hi;
+	void *img;
+	t_img_data tex_img_data;
+}	t_texture;
+
 typedef struct s_map_manager
 {
 	char		*no;
@@ -103,9 +115,9 @@ typedef struct s_map_manager
 	long		c;
 	char		c_player;
 	char		**map;
-	int			wall_colors;
 	int			map_width;
 	int			map_height;
+	t_texture	wall_textures[4];
 }	t_map_manager;
 
 typedef struct s_mlx_manager

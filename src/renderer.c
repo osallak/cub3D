@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/30 12:13:09 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/01 13:33:08 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,6 @@ void draw_line(t_cub_manager *manager, t_draw_lines_struct lines)
   }
 }
 
-
 void normalize_angle(double *ang)
 {
 	if (*ang > 2 * M_PI)
@@ -97,9 +96,9 @@ void clear_window(t_cub_manager * manager, int color, int lx, int ly)
 	int tmp;
 
 	t_draw_point_struct p;
-	tmp = p.point.x;
 	p.point.x = 0;
 	p.point.y = 0;
+	tmp = p.point.x;
 	p.color = color;
 	p.limits.x = lx;
 	p.limits.y = ly;
@@ -192,7 +191,7 @@ int controls(int key, t_cub_manager	*manager)
 		manager->player.walk_direction = -1;
 		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
-		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
+		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)floor(fy / TILE_SIZE)][(int)floor(fx / TILE_SIZE)] != '1')
 		{	
 			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
@@ -206,7 +205,7 @@ int controls(int key, t_cub_manager	*manager)
 		manager->player.walk_direction = 1;
 		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
-		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)fy / TILE_SIZE][(int)fx / TILE_SIZE] != '1')
+		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)floor(fy / TILE_SIZE)][(int)floor(fx / TILE_SIZE)] != '1')
 		{	
 			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
 			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction * 1.0;
@@ -341,17 +340,19 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	yintercept = floor(manager->player.y / TILE_SIZE) * (double)TILE_SIZE;
 	if (ray->isRayFacingDown)
 		yintercept += TILE_SIZE;
-	
-	xintercept = manager->player.x + (yintercept - manager->player.y) / tan(ray->rayAngle);//?radians or degrees
-	ystep = TILE_SIZE;
-	if (ray->isRayFacingUp)
-		ystep *= -1;
-	
-	xstep = TILE_SIZE / tan(ray->rayAngle);//radians or degrees
-	if (ray->isRayFacingLeft && xstep > 0)
-		xstep *= -1;
-	if (ray->isRayFacingRight && xstep < 0)
-		xstep *= -1;
+	if (tan(ray->rayAngle) != 0.0)
+	{
+		xintercept = manager->player.x + (yintercept - manager->player.y) / tan(ray->rayAngle);//?radians or degrees
+		ystep = TILE_SIZE;
+		if (ray->isRayFacingUp)
+			ystep *= -1;
+		
+		xstep = TILE_SIZE / tan(ray->rayAngle);//radians or degrees
+		if (ray->isRayFacingLeft && xstep > 0)
+			xstep *= -1;
+		if (ray->isRayFacingRight && xstep < 0)
+			xstep *= -1;
+	}
 		
 	double next_horz_touch_x = xintercept;
 	double next_horz_touch_y = yintercept;
@@ -429,19 +430,21 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	// 	vert_hit_distance = 3.4E+38;//double max value
 	
 	// printf("ver_dis: %f\thor_dis: %f       (renderer.c:461)\n", vert_hit_distance, horz_hit_distance);
+	ray->wasHitVertical = false;
 	if (found_horz_wall_hit && found_ver_hit)
 	{
 		if (horz_hit_distance < vert_hit_distance)
 		{
 			ray->wallHitX = horz_wall_hit_x;
 			ray->wallHitY = horz_wall_hit_y;
-			ray->distance = horz_hit_distance;	
+			ray->distance = horz_hit_distance;
 		}
 		else
 		{
 			ray->wallHitX = ver_hit_x;
 			ray->wallHitY = ver_hit_y;
 			ray->distance = vert_hit_distance;	
+			ray->wasHitVertical = true;
 		}
 		// printf("bjoj\n");
 	}
@@ -457,11 +460,9 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 		// printf("ver\n");
 		ray->wallHitX = ver_hit_x;
 		ray->wallHitY = ver_hit_y;
-		ray->distance = vert_hit_distance;		
+		ray->distance = vert_hit_distance;
+		ray->wasHitVertical = true;		
 	}
-	// printf("")
-	// printf("x0: %f, y0: %f, x1: %f, y1: %f\n", manager->player.x,  manager->player.y, ray->wallHitX, ray->wallHitX);
-	// draw_line(manager->player.x * SCALING_FACTOR, manager->player.y * SCALING_FACTOR, ray->wallHitX * SCALING_FACTOR, ray->wallHitY, 0, 0, manager, 0xff0000);
 }
 
 void	__initialize_ray_attributes(t_ray *ray)
@@ -511,7 +512,10 @@ void	rendering_3d_walls(t_cub_manager* manager)
 	t_draw_point_struct p;
 	p.limits.x = WIDTH;
 	p.limits.y = HEIGHT;
+	int tex = -1;
 	p.color = 0x00ffffff;
+	double off_x = -1;
+	double off_y = -1;
 	    for (int i = 0; i < NUMBER_OF_RAYS; i++) {
 			// printf("distance: %f\n", manager->rays[i].distance);
         double perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
@@ -519,22 +523,52 @@ void	rendering_3d_walls(t_cub_manager* manager)
         double distanceProjPlane = (WIDTH / 2.0) / tan(radians(FOV) / 2.0);
         double projectedWallHeight = ((double)TILE_SIZE / perpDistance) * distanceProjPlane;
 
-        int wallStripHeight = (int)projectedWallHeight;
+        double	wallStripHeight = projectedWallHeight;
 
-        int wallTopPixel = (HEIGHT / 2) - (wallStripHeight / 2);
-        wallTopPixel = wallTopPixel < 0 ? 0 : wallTopPixel;
+        double wallTopPixel = (HEIGHT / 2.0) - (wallStripHeight / 2.0);
+        // wallTopPixel = wallTopPixel < 0 ? 0 : wallTopPixel;
 
-        int wallBottomPixel = (HEIGHT / 2) + (wallStripHeight / 2);
-        wallBottomPixel = wallBottomPixel > HEIGHT ? HEIGHT : wallBottomPixel;
-
-        // render the wall from wallTopPixel to wallBottomPixel
-        for (int j = wallTopPixel; j < wallBottomPixel;++j)
+        double wallBottomPixel = (HEIGHT / 2.0) + (wallStripHeight / 2.0);
+		if (manager->rays[i].wasHitVertical)
 		{
+			if (manager->rays[i].isRayFacingLeft)
+				tex = WEST;
+			else
+				tex = EAST;
+			off_x = fmod(manager->rays[i].wallHitY, TILE_SIZE);
+		}
+		else
+		{
+			if (manager->rays[i].isRayFacingDown)
+				tex = NORTH;
+			else
+				tex = SOUTH;
+			off_x = fmod(manager->rays[i].wallHitX, TILE_SIZE);
+		}
+        // wallBottomPixel = wallBottomPixel > HEIGHT ? HEIGHT : wallBottomPixel;
+		// tex = 3;
+		off_x = off_x / TILE_SIZE * (double)manager->map->wall_textures[tex].wi;
+		if (off_x < 0 || off_x >= manager->map->wall_textures[tex].wi)
+			panic("off_x must be bounded");
+        // render the wall from wallTopPixel to wallBottomPixel
+		for (int j = wallTopPixel; j < wallBottomPixel - 1;++j)
+		{
+			off_y = (j - (int)wallTopPixel) / wallStripHeight * manager->map->wall_textures[tex].hi;
+			if (off_y < 0 || off_y >= manager->map->wall_textures[tex].hi)
+			{
+				panic("off_y must be bounded");
+			}
 			// cub_mlx_pixel_put(&manager->mlx_manager.img_data, i * WALL_STRIP_WIDTH, j, WIDTH, HEIGHT, 0x00ffffff);
 			p.point.x = i * WALL_STRIP_WIDTH;
 			p.point.y = j;
+			// printf("-->%d\n", off_y);
+			// printf("ray %d\n", i);
+			p.color = *(((int *)manager->map->wall_textures[tex].tex_img_data.addr + ((int)off_y * manager->map->wall_textures[tex].wi + (int)off_x)));
+			// puts("fd");
 			cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
+
 		}
+			
     }
 }
 
@@ -596,6 +630,27 @@ int render(t_map_manager *map_manager)
 	manager.mlx_manager.mlx_window = mlx_new_window(manager.mlx_manager.mlx, WIDTH, HEIGHT, "cub3D");
 	manager.mlx_manager.img_data.img = mlx_new_image(manager.mlx_manager.mlx, WIDTH, HEIGHT);
 	manager.mlx_manager.img_data.addr = mlx_get_data_addr(manager.mlx_manager.img_data.img, &manager.mlx_manager.img_data.bits_per_pixel, &manager.mlx_manager.img_data.line_length, &manager.mlx_manager.img_data.endian);
+	manager.map->wall_textures[NORTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_north.xpm", &manager.map->wall_textures[NORTH].wi, &manager.map->wall_textures[NORTH].hi);
+	manager.map->wall_textures[NORTH].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[NORTH].img, &manager.map->wall_textures[NORTH].tex_img_data.bits_per_pixel,
+	&manager.map->wall_textures[NORTH].tex_img_data.line_length, &manager.map->wall_textures[NORTH].tex_img_data.endian);
+	// printf("%p\n", manager.map->wall_textures[NORTH].tex_img_data.addr);
+	//
+	manager.map->wall_textures[SOUTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_south.xpm", &manager.map->wall_textures[SOUTH].wi, &manager.map->wall_textures[SOUTH].hi);
+	// printf("%p\n", manager.map->wall_textures[SOUTH].tex_img_data.addr);
+	manager.map->wall_textures[SOUTH].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[SOUTH].img, &manager.map->wall_textures[SOUTH].tex_img_data.bits_per_pixel,
+	&manager.map->wall_textures[SOUTH].tex_img_data.line_length, &manager.map->wall_textures[SOUTH].tex_img_data.endian);
+	//
+	manager.map->wall_textures[EAST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_east.xpm", &manager.map->wall_textures[EAST].wi, &manager.map->wall_textures[EAST].hi);
+	manager.map->wall_textures[EAST].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[EAST].img, &manager.map->wall_textures[EAST].tex_img_data.bits_per_pixel,
+	&manager.map->wall_textures[EAST].tex_img_data.line_length, &manager.map->wall_textures[EAST].tex_img_data.endian);
+	// printf("%p\n", manager.map->wall_textures[EAST].tex_img_data.addr);
+	//
+	manager.map->wall_textures[WEST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_west.xpm", &manager.map->wall_textures[WEST].wi, &manager.map->wall_textures[WEST].hi);
+	manager.map->wall_textures[WEST].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[WEST].img, &manager.map->wall_textures[WEST].tex_img_data.bits_per_pixel,
+	&manager.map->wall_textures[WEST].tex_img_data.line_length, &manager.map->wall_textures[WEST].tex_img_data.endian);
+	// printf("hre%d\n", manager.map->wall_textures[1].tex_img_data.addr);
+	// printf("%p\n", manager.map->wall_textures[WEST].tex_img_data.addr);
+	//
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	draw(&manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
