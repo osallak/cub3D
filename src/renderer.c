@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/01 13:33:08 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/02 12:06:45 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,7 +213,7 @@ int controls(int key, t_cub_manager	*manager)
 	}
 	if (key == 53)
 		exit(EXIT_SUCCESS);
-	draw(manager);
+	// draw(manager);
 	return 0;
 }
 
@@ -340,8 +340,8 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	yintercept = floor(manager->player.y / TILE_SIZE) * (double)TILE_SIZE;
 	if (ray->isRayFacingDown)
 		yintercept += TILE_SIZE;
-	if (tan(ray->rayAngle) != 0.0)
-	{
+	// if (tan(ray->rayAngle) != 0.0)
+	// {
 		xintercept = manager->player.x + (yintercept - manager->player.y) / tan(ray->rayAngle);//?radians or degrees
 		ystep = TILE_SIZE;
 		if (ray->isRayFacingUp)
@@ -352,7 +352,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 			xstep *= -1;
 		if (ray->isRayFacingRight && xstep < 0)
 			xstep *= -1;
-	}
+	// }
 		
 	double next_horz_touch_x = xintercept;
 	double next_horz_touch_y = yintercept;
@@ -485,6 +485,10 @@ void	__initialize_ray_attributes(t_ray *ray)
 }
 
 void	render_3d_projected_walls(t_cub_manager* manager);
+// int	render_frame(t_cub_manager* manager)
+// {
+	
+// }
 void	cast_all_rays(t_cub_manager* manager)
 {
 	double	ray_angle;
@@ -654,6 +658,7 @@ int render(t_map_manager *map_manager)
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	draw(&manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
+	mlx_loop_hook(manager.mlx_manager.mlx, draw, &manager);
 	mlx_loop(manager.mlx_manager.mlx);
 	return (0);
 }
