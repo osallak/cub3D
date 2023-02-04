@@ -6,3 +6,4 @@
 - refactor all raycasting functions calls
 - check if all the attributes are initialized
 - intersection not working properly in the joint of two walls
+X add parsing rule for doors

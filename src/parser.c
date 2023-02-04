@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/30 12:01:41 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/04 11:14:39 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,6 +306,14 @@ void	check_validity_of_map(char **map, unsigned int map_lines)
 				check_horizontal_path(map, begin, tmp.d, tmp.a);
 				check_vertical_path(map, begin, map_lines, tmp.a);
 			}
+			if (map[tmp.a][begin] == DOOR_CHAR)
+			{
+				if (begin - 1 >= get_begin(map, tmp.a) && begin + 1 <= get_end(map, tmp.a) && tmp.a - 1 >= 0 && tmp.a + 1 < map_lines)
+				{
+					if (!((map[tmp.a][begin - 1] == '1' && map[tmp.a][begin + 1] == '1') || (map[tmp.a - 1][begin] == '1' && map[tmp.a + 1][begin] == '1')))
+					    panic("Error: invalid map: door is not surrounded by walls");
+                }
+			}
 			++begin;
 		}
 	}
@@ -331,8 +339,8 @@ char	check_map_characters(char **map)
 		{
 			if (!ft_strchr(VALID_CHARS, map[tmp.a][tmp.b]))
 			{
-				printf("<%c>\n", map[tmp.a][tmp.b]);
-				panic("Error: invalid map char");
+				// printf("<%c>\n", map[tmp.a][tmp.b]);
+				panic("Error: invalid map: impostor character");
 			}
 			else
 			{
@@ -345,13 +353,9 @@ char	check_map_characters(char **map)
 		}
 	}
 	if (tmp.c == 0)
-		panic("Error: invalid map");
+		panic("Error: invalid map: player character is missing");
 	return ((char) tmp.c);
 }
-
-
-
-#define VALID_ID "NSWEFC"
 
 int	my_strcmp(char *a, char *b)
 {
@@ -569,7 +573,6 @@ void	parse_map_file(int map_fd, char *file)
 	t_map_manager	*map_manager = malloc(sizeof(t_map_manager));
 	long			skip = 0;
 
-	// TODO: parse assets
 	init_map_manager(map_manager);
 	parse_assets(map_manager, map_fd, & map_line, &skip);
 	if (map_manager->f == -1 || map_manager->c == -1 || !map_manager->no || !map_manager->so
@@ -598,5 +601,5 @@ void	parse_map_file(int map_fd, char *file)
 	// 	printf("%s\n", map[i]);
 	check_validity_of_map(map, map_lines);
 	map_manager->map = map;
-	render(map_manager);
+	// render(map_manager);
 }

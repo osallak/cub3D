@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/01 13:28:33 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/04 11:05:48 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,10 @@
 # include <stdbool.h>
 # include "mlx.h"
 # include "get_next_line.h"
+# include <sys/time.h>
 
-# define VALID_CHARS " 10SWEN"
+# define VALID_CHARS " 10SWEND"
+# define DOOR_CHAR 'D'
 # define PLAYER_CHAR "SWEN"
 # define TILE_SIZE 30
 # define WALL_STRIP_WIDTH 1.0
@@ -36,12 +38,20 @@
 # define WEST 3
 # define HEIGHT 720
 # define R_SPEED 5
-# define W_SPEED 5
+# define W_SPEED 10
 # define MINIMAP_WIDTH 10
 # define MINIMAP_HEIGHT 5
 # define MINIMAP_X 10
 # define MINIMAP_Y 10
 # define NUMBER_OF_RAYS (WIDTH / WALL_STRIP_WIDTH)
+# define mini_x 30
+# define mini_y 30
+# define VALID_ID "NSWEFC"
+typedef struct s_cub_time
+{
+	long long 	lastTick;
+	double 		delta_time;
+}	t_cub_time;
 typedef struct	s_img_data {
 	void	*img;
 	char	*addr;
@@ -111,8 +121,8 @@ typedef struct s_map_manager
 	char		*so;
 	char		*we;
 	char		*ea;
-	long		f;
-	long		c;
+	int		f;
+	int		c;
 	char		c_player;
 	char		**map;
 	int			map_width;
@@ -157,6 +167,7 @@ typedef struct s_cub_manager
 	t_mlx_manager	mlx_manager;
 	t_player		player;
 	t_ray			*rays;
+	t_cub_time	time;
 }	t_cub_manager;
 
 char	**ft_split(char *s, char c);
