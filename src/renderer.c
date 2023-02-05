@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/05 16:12:11 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/05 16:22:53 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -331,7 +331,7 @@ bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
 		return (false);
-	return (manager->map->map[y_index][x_index] != '0');
+	return (manager->map->map[y_index][x_index] == '1' || manager->map->map[y_index][x_index] == 'D');
 }
 bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 {
@@ -344,7 +344,7 @@ bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
 		return (false);
-	return (manager->map->map[y_index][x_index] != '0');
+	return (manager->map->map[y_index][x_index] == '1' || manager->map->map[y_index][x_index] == 'D');
 }
 
 void	cast(t_ray* ray, t_cub_manager* manager)
@@ -637,22 +637,30 @@ void	rendering_3d_walls(t_cub_manager* manager)
 					{
 						if (manager->rays[i].wallHitX + 1 >= 0 && manager->rays[i].wallHitX +1 < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
 						{
-							if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] == 'D')
+							if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] == 'D' && manager->rays[i].distance > 50)
 							// {
 								tex = DOOR;
 								// continue;
 							// }
+							else if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] == 'D' && manager->rays[i].distance <= 50)
+							{
+								manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] = 'O';	
+							}
 						}
 					}	
 					else
 					{
 						if (manager->rays[i].wallHitX - 1 >= 0 && manager->rays[i].wallHitX -1 < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
 						{
-							if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] == 'D')
+							if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance > 50)
 							// {
 								tex = DOOR;
 								// continue;
 							// }
+							else if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance <= 50)
+							{
+								manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] = 'O';
+							}
 						}
 					}
 				}
@@ -660,22 +668,29 @@ void	rendering_3d_walls(t_cub_manager* manager)
 				{
 					if (manager->rays[i].wallHitX >= 0 && manager->rays[i].wallHitX < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY - 1 >= 0 && manager->rays[i].wallHitY - 1 < manager->map->map_height * TILE_SIZE)
 					{
-						if (manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D')
+						if (manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance > 50)
 						// {
 							tex = DOOR;
 							// continue;
 						// }
+						else if (manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance <= 50)
+						{
+							manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] = 'O';	
+						}
+						
 					}
 				}	
 				else
 				{
 					if (manager->rays[i].wallHitX  >= 0 && manager->rays[i].wallHitX < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY + 1 >= 0 && manager->rays[i].wallHitY + 1 < manager->map->map_height * TILE_SIZE)
 					{
-						if (manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D')
+						if (manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance > 50)
 						// {
 							tex = DOOR;
 							// continue;
 						// }
+						else if (manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance <= 50)
+							manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] = 'O';
 					}	
 					
 				}
