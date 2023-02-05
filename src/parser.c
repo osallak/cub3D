@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/04 11:14:39 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/04 11:37:48 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,7 +339,6 @@ char	check_map_characters(char **map)
 		{
 			if (!ft_strchr(VALID_CHARS, map[tmp.a][tmp.b]))
 			{
-				// printf("<%c>\n", map[tmp.a][tmp.b]);
 				panic("Error: invalid map: impostor character");
 			}
 			else
@@ -483,6 +482,8 @@ void	check_c_asset(char **map_line, t_map_manager *map_manager)
 	splitted = ft_split(*map_line, ' ');
 	if (splitted && !my_strcmp(splitted[0], "C") && splitted[1])
 	{
+		if (map_manager->c != -1)
+			panic("Error: invalid map: duplicate ceil color");
 		colors = ft_split(splitted[1], ',');
 		if (splitted[1][0] == ',')
 			panic("error: `, at the begin of C asset");
@@ -510,6 +511,8 @@ void	check_f_asset(char **map_line, t_map_manager *map_manager)
 	splitted = ft_split(*map_line, ' ');
 	if (splitted && !my_strcmp(splitted[0], "F") && splitted[1])
 	{
+		if (map_manager->f != -1)
+			panic("Error: invalid map: duplicate floor color");
 		colors = ft_split(splitted[1], ',');
 		if (splitted[1][0] == ',')
 			panic("error: `, at the begin of F asset");
@@ -601,5 +604,5 @@ void	parse_map_file(int map_fd, char *file)
 	// 	printf("%s\n", map[i]);
 	check_validity_of_map(map, map_lines);
 	map_manager->map = map;
-	// render(map_manager);
+	render(map_manager);
 }

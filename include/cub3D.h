@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/04 11:05:48 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/05 11:16:13 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,10 @@
 # define SOUTH 1 
 # define EAST 2
 # define WEST 3
+# define DOOR 4
 # define HEIGHT 720
 # define R_SPEED 5
-# define W_SPEED 10
+# define W_SPEED 500
 # define MINIMAP_WIDTH 10
 # define MINIMAP_HEIGHT 5
 # define MINIMAP_X 10
@@ -127,7 +128,7 @@ typedef struct s_map_manager
 	char		**map;
 	int			map_width;
 	int			map_height;
-	t_texture	wall_textures[4];
+	t_texture	wall_textures[5];
 }	t_map_manager;
 
 typedef struct s_mlx_manager

@@ -1,8 +1,8 @@
 - check the asset for direction to only include two strings
-- check for duplicated colors
-- delete the old map
-- remove the ft_strlen for everyloop
-- init ray directions (is facing up/down/right/left)
+X check for duplicated colors
+X delete the old map
+X remove the ft_strlen for everyloop
+X init ray directions (is facing up/down/right/left)
 - refactor all raycasting functions calls
 - check if all the attributes are initialized
 - intersection not working properly in the joint of two walls
