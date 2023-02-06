@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/05 16:22:53 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/06 16:41:37 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -559,10 +559,6 @@ void	rendering_3d_walls(t_cub_manager* manager)
 		// rendrering of the doors is dependent on the player position
 		int px = manager->player.x / TILE_SIZE;
 		int py = manager->player.y / TILE_SIZE;
-		int l = 0;
-		int r = 0;
-		int u = 0;
-		int d = 0;
 		if (px >= 0 && px < manager->map->map_width && py >= 0 && py < manager->map->map_height)
 		{
 			if (manager->map->map[py][px] == 'D')
@@ -644,7 +640,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 							// }
 							else if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] == 'D' && manager->rays[i].distance <= 50)
 							{
-								manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] = 'O';	
+								manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] = 'O';	
 							}
 						}
 					}	
