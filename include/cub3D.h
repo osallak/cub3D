@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/07 15:29:28 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/07 15:49:02 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@
 # define MINIMAP_X 10
 # define MINIMAP_Y 10
 # define NUMBER_OF_RAYS (WIDTH / WALL_STRIP_WIDTH)
-# define mini_x 15
+# define mini_x 20
 # define mini_y 15
 # define VALID_ID "NSWEFC"
 typedef struct s_cub_time

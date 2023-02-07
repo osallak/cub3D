@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/07 15:47:11 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/07 15:58:51 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -340,13 +340,13 @@ int draw(t_cub_manager *manager)
 	cast_all_rays(manager);
 	// draw_empty_rect(manager, (t_draw_lines_struct){{0,0},{10 * mini_x, 6 * mini_y}, {WIDTH, HEIGHT}, 0x00ffffff});
 	// draw_empty_rect(0, 0, 10 * mini_x, 6 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
-	double mapsx = manager->player.x - 5.0 * mini_x;
-	// mapsx = mapsx * (mini_x * 10);
+	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
+	mapsx = mapsx / TILE_SIZE * mini_x;
 	// double mapex = manager->player.x + 5.0 * TILE_SIZE;
-	double mapsy = manager->player.y - 3.0 * mini_y;
-	// mapsy = mapsy * (mini_y * 6);
-	p.limits.x = manager->player.x + 5.0 * mini_x;
-	p.limits.y = manager->player.y + 3.0 * mini_y;
+	double mapsy = manager->player.y - 3.0 * TILE_SIZE;
+	mapsy = mapsy / TILE_SIZE * mini_y;
+	// p.limits.x = manager->player.x + 5.0 * mini_x;
+	// p.limits.y = manager->player.y + 3.0 * mini_y;
 	// double mapey = manager->player.y + 3.0 * TILE_SIZE;
 	for (int i = 0;i < mini_y * 6;++i)
 	{
@@ -354,8 +354,8 @@ int draw(t_cub_manager *manager)
 		for (int j = 0;j < mini_x * 10;++j)
 		{
 			p.point.x = j;
-			int x = (mapsy + i) / TILE_SIZE;
-			int y = (mapsx + j) / TILE_SIZE;
+			int x = (mapsy + i) / mini_y;
+			int y = (mapsx + j) / mini_x;
 			if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
 				p.color = 0x00ffffff;
 			else if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && (manager->map->map[x][y] == 'D' || manager->map->map[x][y] == 'O'))
