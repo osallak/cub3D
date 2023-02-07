@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/06 18:37:47 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/07 15:29:28 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,15 +38,15 @@
 # define WEST 3
 # define DOOR 4
 # define HEIGHT 720
-# define R_SPEED 5
-# define W_SPEED 500
+# define R_SPEED (TILE_SIZE * 2)
+# define W_SPEED (TILE_SIZE * 2)
 # define MINIMAP_WIDTH 10
 # define MINIMAP_HEIGHT 5
 # define MINIMAP_X 10
 # define MINIMAP_Y 10
 # define NUMBER_OF_RAYS (WIDTH / WALL_STRIP_WIDTH)
-# define mini_x 30
-# define mini_y 30
+# define mini_x 15
+# define mini_y 15
 # define VALID_ID "NSWEFC"
 typedef struct s_cub_time
 {
@@ -156,6 +156,9 @@ typedef struct s_player
 	int		walk_direction;
 	double	x;
 	double	y;
+	bool move_x;
+	bool move_y;
+	int rotate;
 }	t_player;
 
 typedef struct s_ray

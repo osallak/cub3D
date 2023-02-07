@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/07 11:40:16 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/07 15:47:11 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,47 +180,57 @@ int controls(int key, t_cub_manager	*manager)
 {
 	double fx;
 	double fy;
-	// manager->player.walk_speed = W_SPEED * manager->time.delta_time;
-	// printf("x  = -->%lf\n",manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction);
-	// manager->player.rotation_speed = radians(R_SPEED) * manager->time.delta_time;
+
 	if (key == 124)
 	{
-		manager->player.turn_direction = 1;
-		normalize_angle(&manager->player.rotation_angle);
-		manager->player.rotation_angle += (manager->player.turn_direction * manager->player.rotation_speed);
-		normalize_angle(&manager->player.rotation_angle);
+		// puts("left");
+		manager->player.rotate = 1;
 	}
 	else if (key == 123)
 	{
-		manager->player.turn_direction = -1;
-		normalize_angle(&manager->player.rotation_angle);
-		manager->player.rotation_angle += (manager->player.turn_direction * manager->player.rotation_speed);
-		normalize_angle(&manager->player.rotation_angle);
+		// puts("right");
+		manager->player.rotate = -1;
 	}
 	else if (key == 125)
 	{
 		manager->player.walk_direction = -1;
-		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction;
-		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction;
-		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)(fy / TILE_SIZE)][(int)(fx / TILE_SIZE)] != '1')
-		{	
-			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction;
-			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction;
-			// printf("hop\n");
-		}
+		manager->player.move_y = true;
 		// printf("hooray\n");
 		
 	}
 	else if (key == 126)
 	{
 		manager->player.walk_direction = 1;
-		fx = manager->player.x + manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction;
-		fy = manager->player.y + manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction;
-		if (fy >= 0 && fy < manager->map->map_height * TILE_SIZE && fx >= 0 && fx < manager->map->map_width * TILE_SIZE && manager->map->map[(int)(fy / TILE_SIZE)][(int)(fx / TILE_SIZE)] != '1')
-		{	
-			manager->player.x += manager->player.walk_speed * cos(manager->player.rotation_angle) * manager->player.walk_direction;
-			manager->player.y += manager->player.walk_speed * sin(manager->player.rotation_angle) * manager->player.walk_direction;
-		}
+		manager->player.move_y = true;
+	}
+	if (key == 53)
+		exit(EXIT_SUCCESS);
+	// draw(manager);
+	return 0;
+}
+
+int controls_up(int key, t_cub_manager	*manager)
+{
+	double fx;
+	double fy;
+
+	if (key == 124)
+	{
+		manager->player.rotate = 0;
+	}
+	else if (key == 123)
+	{
+		manager->player.rotate = 0;
+	}
+	else if (key == 125)
+	{
+		manager->player.move_y = false;
+		// printf("hooray\n");
+		
+	}
+	else if (key == 126)
+	{
+		manager->player.move_y = false;
 	}
 	if (key == 53)
 		exit(EXIT_SUCCESS);
@@ -268,22 +278,61 @@ void	draw_empty_circle(t_cub_manager *manager, t_draw_circle c)
 	}
 }
 
+void	move_player(t_cub_manager *manager)
+{
+	double nx = 0;
+	double ny = 0;
+	if (manager->player.move_y)
+	{
+		ny = manager->player.y + sin(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
+		nx = manager->player.x + cos(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
+	}
+	if (manager->map->map[(int)(ny / TILE_SIZE)][(int)(nx / TILE_SIZE)] != '1')
+	{
+		manager->player.y = ny;
+		manager->player.x = nx;
+		// printf("%lf\n", (ny));
+		// puts("here");
+	}
+	if (manager->player.rotate && manager->map->map[(int)(manager->player.y / TILE_SIZE)][(int)(manager->player.x / TILE_SIZE)] != '1')
+	{
+		// puts("here\n");
+		// normalize_angle(&manager->player.rotation_angle);
+		manager->player.rotation_angle += (manager->player.rotation_speed * manager->time.delta_time * manager->player.rotate);
+		normalize_angle(&manager->player.rotation_angle);
+		
+	}
+}
+
 int draw(t_cub_manager *manager)
 {
-	double	angle;
+	// double	angle;
 	int		num_of_rays;
+	static int frames;
+	static long goal;
+	t_draw_point_struct p;
+
 	if (manager->time.lastTick == 0)
 	{
 	// 	// puts("here\n");
 	// 	// exit(0);
 		manager->time.lastTick = get_time(manager);
 	}
-	// while (get_time(manager) < manager->time.lastTick + (1000.0 / 120.0))
-	// {
+	while (get_time(manager) < manager->time.lastTick + (1000.0 / 90.0))
+	{
 		
-	// // }
+	}
+	if (!goal)
+		goal = get_time(manager) + 1000;
+	if (goal <= get_time(manager))
+	{
+		goal = get_time(manager) + 1000;
+		printf("fps: %ld\n", frames);
+		frames = 0;
+	}
 	manager->time.delta_time = (get_time(manager) - manager->time.lastTick) / 1000.0;
 	manager->time.lastTick = get_time(manager);
+	move_player(manager);
 	// printf("draw delta time: %lf\n", manager->time.delta_time);
 	// int		i;
 	// double	dist;
@@ -291,26 +340,51 @@ int draw(t_cub_manager *manager)
 	cast_all_rays(manager);
 	// draw_empty_rect(manager, (t_draw_lines_struct){{0,0},{10 * mini_x, 6 * mini_y}, {WIDTH, HEIGHT}, 0x00ffffff});
 	// draw_empty_rect(0, 0, 10 * mini_x, 6 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
-	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
+	double mapsx = manager->player.x - 5.0 * mini_x;
+	// mapsx = mapsx * (mini_x * 10);
 	// double mapex = manager->player.x + 5.0 * TILE_SIZE;
-	double mapsy = manager->player.y - 3.0 * TILE_SIZE;
+	double mapsy = manager->player.y - 3.0 * mini_y;
+	// mapsy = mapsy * (mini_y * 6);
+	p.limits.x = manager->player.x + 5.0 * mini_x;
+	p.limits.y = manager->player.y + 3.0 * mini_y;
 	// double mapey = manager->player.y + 3.0 * TILE_SIZE;
-	// for (int i = 0;i < mini_y * 6;++i)
-	// {
-	// 	for (int j = 0;j < mini_x * 10;++j)
-	// 	{
-	// 		int x = (mapsy + i) / TILE_SIZE;
-	// 		int y = (mapsx + j) / TILE_SIZE;
-	// 		if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
-	// 			cub_mlx_pixel_put(&manager->mlx_manager.img_data, j, i, mini_x * 10, mini_y * 6, 0x0029af00);
-	// 	}
-	// }
-
+	for (int i = 0;i < mini_y * 6;++i)
+	{
+		p.point.y = i;
+		for (int j = 0;j < mini_x * 10;++j)
+		{
+			p.point.x = j;
+			int x = (mapsy + i) / TILE_SIZE;
+			int y = (mapsx + j) / TILE_SIZE;
+			if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
+				p.color = 0x00ffffff;
+			else if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && (manager->map->map[x][y] == 'D' || manager->map->map[x][y] == 'O'))
+				p.color = 0x00ff0000;
+			else
+				p.color = 0x00000000;
+			cub_mlx_pixel_put(&manager->mlx_manager.img_data,p);
+		}
+	}
+	double angle = manager->player.rotation_angle - (radians(FOV / 2.0));
+	t_draw_lines_struct line;
+	line.color = 0x0000ff00;
+	line.start.x = round(mini_x * 10 / 2.0);
+	line.start.y = round(mini_y * 6 / 2.0);
+	double incr = radians(FOV) / (mini_x * 10.0);
+	for (int i = 0;i < mini_x * 10;++i)
+	{
+		line.end.x = line.start.x + cos(angle) * 30;
+		line.end.y = line.start.y + sin(angle) * 30;
+		draw_line(manager, line);
+		angle += incr;
+		normalize_angle(&angle);
+	}
 	// draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
 	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
 	// angle = manager->player.rotation_angle - (radians(FOV / 2.0));
 	// num_of_rays = WIDTH / (double) (WALL_STRIP_WIDTH);
 	mlx_put_image_to_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->mlx_manager.img_data.img, 0, 0);
+	++frames;
 	clear_window(manager, 0x00000000, WIDTH, HEIGHT);
 	return 0;
 }
@@ -675,7 +749,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 			{
 				y = (manager->rays[i].wallHitY - 1.) / TILE_SIZE;
 				if (manager->map->map[y][x] != 'D')
-					tex = WEST;
+					tex = NORTH;
 				else
 					tex = DOOR;
 			}
@@ -694,7 +768,6 @@ void	rendering_3d_walls(t_cub_manager* manager)
 				cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
 
 			}
-			
 		}
     }
 }
@@ -731,7 +804,7 @@ int render(t_map_manager *map_manager)
 	manager.player.rotation_speed = radians(R_SPEED);
 	manager.time.delta_time = 0;
 	manager.time.lastTick = 0;
-	manager.player.walk_speed = 5;
+	manager.player.walk_speed = W_SPEED;
 	while (++i < manager.map->map_height)
 	{
 		j = -1;
@@ -789,8 +862,15 @@ int render(t_map_manager *map_manager)
 	manager.head = 0x0;
 	manager.tail = 0x0;
 	manager.next = 0x0;
+	manager.player.move_x = false;
+	manager.player.move_y = false;
+	manager.player.rotate = false;
+	// TODO: implement delta time
+	// TODO: minimap with variable size
+	// TODO: change the texture before rendering the walls
 	mlx_loop_hook(manager.mlx_manager.mlx, draw, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
+	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYUP, 1L<<0, controls_up, &manager);
 	mlx_loop(manager.mlx_manager.mlx);
 	return (0);
 }
