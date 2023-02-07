@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/05 11:16:13 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/06 18:37:47 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,15 @@ typedef struct s_draw_point_struct
 	int				color;
 }	t_draw_point_struct;
 
+typedef struct s_door
+{
+	int x;
+	int y;	
+	double dist;
+	struct s_door *prev;
+	struct s_door *next;
+}	t_door;
+
 typedef struct s_draw_lines_struct
 {
 	t_pair_double	start;
@@ -169,6 +178,10 @@ typedef struct s_cub_manager
 	t_player		player;
 	t_ray			*rays;
 	t_cub_time	time;
+	t_door	*head;
+	t_door	*next;
+	t_door	*tail;
+	t_door	*door;
 }	t_cub_manager;
 
 char	**ft_split(char *s, char c);

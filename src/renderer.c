@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/06 16:41:37 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/07 11:40:16 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -331,7 +331,8 @@ bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
 		return (false);
-	return (manager->map->map[y_index][x_index] == '1' || manager->map->map[y_index][x_index] == 'D');
+	double d = __distance(manager->player.x, manager->player.y, x, y);
+	return (manager->map->map[y_index][x_index] == '1' || (manager->map->map[y_index][x_index] == 'D' && (d > TILE_SIZE)));
 }
 bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 {
@@ -344,7 +345,8 @@ bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 	y_index = y / TILE_SIZE;
 	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
 		return (false);
-	return (manager->map->map[y_index][x_index] == '1' || manager->map->map[y_index][x_index] == 'D');
+	double d = __distance(manager->player.x, manager->player.y, x, y);
+	return (manager->map->map[y_index][x_index] == '1' || (manager->map->map[y_index][x_index] == 'D' && (d > TILE_SIZE)));
 }
 
 void	cast(t_ray* ray, t_cub_manager* manager)
@@ -444,11 +446,11 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	double horz_hit_distance = 0.0;
 	double vert_hit_distance = 0.0;
 	// if (found_horz_wall_hit)
-		horz_hit_distance = hypot(manager->player.x - horz_wall_hit_x, manager->player.y - horz_wall_hit_y);
+		horz_hit_distance = __distance(manager->player.x , manager->player.y ,horz_wall_hit_x, horz_wall_hit_y);
 	// else
 	// 	horz_hit_distance = 3.4E+38;//double max value
 	// if (found_ver_hit)
-		vert_hit_distance = hypot(manager->player.x - ver_hit_x, manager->player.y - ver_hit_y);
+		vert_hit_distance = __distance(manager->player.x , manager->player.y ,ver_hit_x, ver_hit_y);
 	// else
 	// 	vert_hit_distance = 3.4E+38;//double max value
 	
@@ -507,11 +509,73 @@ void	__initialize_ray_attributes(t_ray *ray)
 	ray->isRayFacingLeft = !ray->isRayFacingRight;
 }
 
-void	render_3d_projected_walls(t_cub_manager* manager);
-// int	render_frame(t_cub_manager* manager)
-// {
-	
-// }
+
+
+double distance(double x, double y, double a, double b)
+{
+	return (sqrt((a - x) * (a - x) + (b - y) * (b - y)));
+}
+
+void	*xalloc(size_t size)
+{
+	void *ptr = malloc(size);
+	if (!ptr)
+		exit(1);
+	return (ptr);
+}
+
+t_door	*create_door(int x, int y)
+{
+	t_door	*door;
+	door = xalloc(sizeof(t_door));
+	door->x = x;
+	door->y = y;
+	door->next = 0x0;
+	door->prev = 0x0;
+	return door;
+}
+
+void	add_door(t_door **head, t_door *door, t_door **tail)
+{
+	t_door *tmp;
+	if (head == 0x0 || !door)
+		exit(1);
+	if (*head == 0x0 || *tail == 0x0)
+	{
+		*head = door;
+		*tail = door;
+		return ;
+	}
+	tmp = *head;
+	while (tmp->next != 0x0)
+		tmp = tmp->next;
+	door->prev = tmp;
+	tmp->next = door;
+	*tail = door;
+}
+
+void delete_door(t_door **head, t_door **door, t_door *tail)
+{
+	// t_door *prev;
+	// t_door *next;
+	if (*door == *head)
+		*head = (*head)->next;
+	else if (*door == tail)
+	{
+		(*door)->prev->next = 0x0;
+	}
+	else
+	{
+		if ((*door)->prev && (*door)->next)
+		{
+			(*door)->prev->next = (*door)->next;
+			(*door)->next->prev = (*door)->prev;
+		}
+	}
+	free(*door);
+    *door = 0x0;
+}
+
 void	cast_all_rays(t_cub_manager* manager)
 {
 	double	ray_angle;
@@ -527,7 +591,22 @@ void	cast_all_rays(t_cub_manager* manager)
 		normalize_angle(&ray_angle);
 		manager->rays[i].rayAngle =  ray_angle;
 		__initialize_ray_attributes(&manager->rays[i]);
+		manager->door = manager->head;
+		while (manager->door)
+		{
+			// printf("%d\t%d\n", manager->door->x, manager->door->y);
+			double dist = distance(manager->player.x, manager->player.y, manager->door->x * TILE_SIZE, manager->door->y * TILE_SIZE);
+			manager->next = manager->door->next;
+			if (dist > TILE_SIZE * 2)
+			{
+				// puts("here\n");
+				manager->map->map[manager->door->y][manager->door->x] = 'D';
+				delete_door(&manager->head, &manager->door, manager->tail);
+			}
+			manager->door = manager->next;
+		}
 		cast(&manager->rays[i], manager);
+
 		ray_angle+= angle_increment;
 	}
 	// render_3d_projected_walls(manager);
@@ -557,231 +636,66 @@ void	rendering_3d_walls(t_cub_manager* manager)
 
         double wallBottomPixel = (HEIGHT / 2.0) + (wallStripHeight / 2.0);
 		// rendrering of the doors is dependent on the player position
-		int px = manager->player.x / TILE_SIZE;
-		int py = manager->player.y / TILE_SIZE;
-		if (px >= 0 && px < manager->map->map_width && py >= 0 && py < manager->map->map_height)
+		int x = 0;
+		int y = 0;
+		if (manager->rays[i].wasHitVertical)
 		{
-			if (manager->map->map[py][px] == 'D')
+			off_x = fmod(manager->rays[i].wallHitY, TILE_SIZE);
+			// checking for vertical doors;
+			y = manager->rays[i].wallHitY / TILE_SIZE;
+			if (manager->rays[i].isRayFacingRight)
 			{
-				// puts("inside door");
-				if (manager->rays[i].wasHitVertical)
-				{
-					if (manager->rays[i].isRayFacingRight)
-					{
-						// puts("facing right");
-							if (manager->rays[i].wallHitX + 1 >= 0 && manager->rays[i].wallHitX +1 < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
-							{
-								if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] == 'D')
-								{
-									tex = DOOR;
-									// puts("wall on right");
-									// continue;
-								}
-								else
-									tex = EAST;
-								// }
-							}
-					}
-					else
-					{
-						if (manager->rays[i].wallHitX - 1 >= 0 && manager->rays[i].wallHitX -1 < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
-						{
-							if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] == 'D')
-							// {
-								tex = DOOR;
-								// continue;
-							// }
-							else
-								tex = WEST;
-						}
-						// tex = WEST;
-					}
-				}
+				x = (manager->rays[i].wallHitX + 1.) / TILE_SIZE;
+				if (manager->map->map[y][x] != 'D')
+					tex = EAST;
 				else
-				{
-					if (manager->rays[i].isRayFacingUp)
-					{
-						if (manager->rays[i].wallHitX >= 0 && manager->rays[i].wallHitX < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY - 1 >= 0 && manager->rays[i].wallHitY - 1 < manager->map->map_height * TILE_SIZE)
-						{
-							if (manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D')
-							// {
-								tex = DOOR;
-								// continue;
-							// }
-						}
-					}	
-					else
-					{
-						if (manager->rays[i].wallHitX  >= 0 && manager->rays[i].wallHitX < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY + 1 >= 0 && manager->rays[i].wallHitY + 1 < manager->map->map_height * TILE_SIZE)
-						{
-							if (manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D')
-							// {
-								tex = DOOR;
-								// continue;
-							// }
-						}	
-						
-					}
-				}
-				
+					tex = DOOR;
 			}
 			else
 			{
-				if (manager->rays[i].wasHitVertical)
-				{
-					if (manager->rays[i].isRayFacingRight)
-					{
-						if (manager->rays[i].wallHitX + 1 >= 0 && manager->rays[i].wallHitX +1 < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
-						{
-							if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] == 'D' && manager->rays[i].distance > 50)
-							// {
-								tex = DOOR;
-								// continue;
-							// }
-							else if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] == 'D' && manager->rays[i].distance <= 50)
-							{
-								manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1)/ TILE_SIZE)] = 'O';	
-							}
-						}
-					}	
-					else
-					{
-						if (manager->rays[i].wallHitX - 1 >= 0 && manager->rays[i].wallHitX -1 < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
-						{
-							if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance > 50)
-							// {
-								tex = DOOR;
-								// continue;
-							// }
-							else if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance <= 50)
-							{
-								manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX - 1)/ TILE_SIZE)] = 'O';
-							}
-						}
-					}
-				}
-				if (manager->rays[i].isRayFacingUp)
-				{
-					if (manager->rays[i].wallHitX >= 0 && manager->rays[i].wallHitX < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY - 1 >= 0 && manager->rays[i].wallHitY - 1 < manager->map->map_height * TILE_SIZE)
-					{
-						if (manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance > 50)
-						// {
-							tex = DOOR;
-							// continue;
-						// }
-						else if (manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance <= 50)
-						{
-							manager->map->map[(int)((manager->rays[i].wallHitY - 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] = 'O';	
-						}
-						
-					}
-				}	
+				x = (manager->rays[i].wallHitX - 1.) / TILE_SIZE;
+				if (manager->map->map[y][x] != 'D')
+					tex = WEST;
 				else
-				{
-					if (manager->rays[i].wallHitX  >= 0 && manager->rays[i].wallHitX < manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY + 1 >= 0 && manager->rays[i].wallHitY + 1 < manager->map->map_height * TILE_SIZE)
-					{
-						if (manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance > 50)
-						// {
-							tex = DOOR;
-							// continue;
-						// }
-						else if (manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D'&& manager->rays[i].distance <= 50)
-							manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] = 'O';
-					}	
-					
-				}
+					tex = DOOR;
 			}
-		}
-		// if (manager->rays[i].isRayFacingRight)
-		// {
-		// 	if (manager->rays[i].wallHitX >= 0 && manager->rays[i].wallHitX <manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY + 1 >= 0 && manager->rays[i].wallHitY + 1  < manager->map->map_height * TILE_SIZE)
-		// 	{
-		// 		if (manager->map->map[(int)((manager->rays[i].wallHitY + 1) / TILE_SIZE)][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D')
-		// 			continue;
-		// 	}
-		// }
-		// else
-		// {
-		// 	if (manager->rays[i].wallHitX >= 0 && manager->rays[i].wallHitX <manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
-		// 	{
-		// 		if (manager->map->map[(int)(manager->rays[i].wallHitY - 1) / TILE_SIZE][(int)((manager->rays[i].wallHitX)/ TILE_SIZE)] == 'D')
-		// 			continue;
-		// 		// if (manager->map->map[(int)(manager->rays[i].wallHitY / TILE_SIZE)][(int)(manager->rays[i].wallHitX / TILE_SIZE)] == 'D')
-		// 		// {
-		// 		// 	// printf("%d\n", i);
-		// 		// 	tex = DOOR;
-		// 		// }
-		// 	}
-			
-		// }
-		if (manager->rays[i].wasHitVertical)
-		{
-			if (manager->rays[i].isRayFacingLeft && tex == -1)
-				tex = WEST;
-			else if (tex == -1)
-				tex = EAST;
-			off_x = fmod(manager->rays[i].wallHitY, TILE_SIZE);
 		}	
-		// if (manager->rays[i].isRayFacingUp)
-		// {
-		// 	if (manager->rays[i].wallHitX + 1 >= 0 && manager->rays[i].wallHitX + 1 <manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
-		// 	{
-		// 		if (manager->map->map[(int)((manager->rays[i].wallHitY) / TILE_SIZE)][(int)((manager->rays[i].wallHitX + 1) / TILE_SIZE)] == 'D')
-		// 			continue;
-		// 		// if (manager->map->map[(int)(manager->rays[i].wallHitY / TILE_SIZE)][(int)(manager->rays[i].wallHitX / TILE_SIZE)] == 'D')
-		// 		// {
-		// 		// 	// printf("%d\n", i);
-		// 		// 	tex = DOOR;
-		// 		// }
-		// 	}
-		// }
-		// else
-		// {
-		// 	if (manager->rays[i].wallHitX - 1>= 0 && manager->rays[i].wallHitX - 1 <manager->map->map_width * TILE_SIZE && manager->rays[i].wallHitY >= 0 && manager->rays[i].wallHitY < manager->map->map_height * TILE_SIZE)
-		// 	{
-		// 		if (manager->map->map[(int)(manager->rays[i].wallHitY / TILE_SIZE)][(int)(manager->rays[i].wallHitX - 1) / TILE_SIZE] == 'D')
-		// 			continue;
-		// 		// if (manager->map->map[(int)(manager->rays[i].wallHitY / TILE_SIZE)][(int)(manager->rays[i].wallHitX / TILE_SIZE)] == 'D')
-		// 		// {
-		// 		// 	// printf("%d\n", i);
-		// 		// 	tex = DOOR;
-		// 		// }
-		// 	}
-		// }
-		// if (!manager->rays[i].wasHitVertical)
 		else
 		{
-
-			if (manager->rays[i].isRayFacingDown && tex == -1)
-				tex = SOUTH;
-			else if (tex == -1)
-				tex = NORTH;
+			x = manager->rays[i].wallHitX / TILE_SIZE;
+			if (manager->rays[i].isRayFacingDown)
+			{
+				y = (manager->rays[i].wallHitY + 1.) / TILE_SIZE;
+				if (manager->map->map[y][x] != 'D')
+					tex = SOUTH;
+				else
+					tex = DOOR;
+			}
+			else
+			{
+				y = (manager->rays[i].wallHitY - 1.) / TILE_SIZE;
+				if (manager->map->map[y][x] != 'D')
+					tex = WEST;
+				else
+					tex = DOOR;
+			}
 			off_x = fmod(manager->rays[i].wallHitX, TILE_SIZE);
 		}
-        // wallBottomPixel = wallBottomPixel > HEIGHT ? HEIGHT : wallBottomPixel;
-		// tex = 3;
-		off_x = off_x / TILE_SIZE * (double)manager->map->wall_textures[tex].wi;
-		if (off_x < 0 || off_x >= manager->map->wall_textures[tex].wi)
-			panic("off_x must be bounded");
-        // render the wall from wallTopPixel to wallBottomPixel
-		for (int j = wallTopPixel; j < wallBottomPixel - 1;++j)
+		// printf("tex: %d\n", tex);
+		if (tex != -1)
 		{
-			off_y = (j - (int)wallTopPixel) / wallStripHeight * manager->map->wall_textures[tex].hi;
-			if (off_y < 0 || off_y >= manager->map->wall_textures[tex].hi)
+			off_x = off_x / TILE_SIZE * (double)manager->map->wall_textures[tex].wi;
+			for (int j = wallTopPixel; j < wallBottomPixel - 1;++j)
 			{
-				panic("off_y must be bounded");
-			}
-			// cub_mlx_pixel_put(&manager->mlx_manager.img_data, i * WALL_STRIP_WIDTH, j, WIDTH, HEIGHT, 0x00ffffff);
-			p.point.x = i * WALL_STRIP_WIDTH;
-			p.point.y = j;
-			// printf("-->%d\n", off_y);
-			// printf("ray %d\n", i);
-			p.color = *(((int *)manager->map->wall_textures[tex].tex_img_data.addr + ((int)off_y * manager->map->wall_textures[tex].wi + (int)off_x)));
-			// puts("fd");
-			cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
+				off_y = (j - (int)wallTopPixel) / wallStripHeight * manager->map->wall_textures[tex].hi;
+				p.point.x = i * WALL_STRIP_WIDTH;
+				p.point.y = j;
+				p.color = *(((int *)manager->map->wall_textures[tex].tex_img_data.addr + ((int)off_y * manager->map->wall_textures[tex].wi + (int)off_x)));
+				cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
 
-		}
+			}
 			
+		}
     }
 }
 
@@ -871,6 +785,10 @@ int render(t_map_manager *map_manager)
 	&manager.map->wall_textures[DOOR].tex_img_data.line_length, &manager.map->wall_textures[DOOR].tex_img_data.endian);
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	// draw(&manager);
+	manager.door = 0x0;
+	manager.head = 0x0;
+	manager.tail = 0x0;
+	manager.next = 0x0;
 	mlx_loop_hook(manager.mlx_manager.mlx, draw, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
 	mlx_loop(manager.mlx_manager.mlx);
