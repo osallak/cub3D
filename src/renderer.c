@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/07 15:58:51 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/07 16:44:43 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -282,26 +282,49 @@ void	move_player(t_cub_manager *manager)
 {
 	double nx = 0;
 	double ny = 0;
+	bool increment = true;
 	if (manager->player.move_y)
 	{
 		ny = manager->player.y + sin(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
 		nx = manager->player.x + cos(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
 	}
-	if (manager->map->map[(int)(ny / TILE_SIZE)][(int)(nx / TILE_SIZE)] != '1')
+	double da = nx;
+	double db = ny;
+	double dx = nx - manager->player.x;
+	double dy = ny - manager->player.y;
+	double steps = fabs(dx) > fabs(dy) ? fabs(dx) : fabs(dy);
+	int st = round(steps);
+
+	// Calculate the x and y increments for each step
+	double xIncrement = dx / (steps);
+	double yIncrement = dy / (steps);
+  	for (int i = 0; i <= st; ++i) {	
+		int x = nx / TILE_SIZE;
+		int y = ny / TILE_SIZE;
+		if (x >= 0 && x < manager->map->map_width && y >= 0 && y < manager->map->map_height && manager->map->map[y][x] == '1')
+		{
+			increment = false;
+			false;
+		}
+		nx += xIncrement;
+		ny += yIncrement;
+	}
+	if (increment)
 	{
-		manager->player.y = ny;
-		manager->player.x = nx;
+		manager->player.y = db;
+		manager->player.x = da;
 		// printf("%lf\n", (ny));
 		// puts("here");
+	
 	}
-	if (manager->player.rotate && manager->map->map[(int)(manager->player.y / TILE_SIZE)][(int)(manager->player.x / TILE_SIZE)] != '1')
+	if (manager->player.rotate)
 	{
 		// puts("here\n");
 		// normalize_angle(&manager->player.rotation_angle);
 		manager->player.rotation_angle += (manager->player.rotation_speed * manager->time.delta_time * manager->player.rotate);
 		normalize_angle(&manager->player.rotation_angle);
 		
-	}
+	}		
 }
 
 int draw(t_cub_manager *manager)
@@ -318,10 +341,10 @@ int draw(t_cub_manager *manager)
 	// 	// exit(0);
 		manager->time.lastTick = get_time(manager);
 	}
-	while (get_time(manager) < manager->time.lastTick + (1000.0 / 90.0))
-	{
+	// while (get_time(manager) < manager->time.lastTick + (1000.0 / 90.0))
+	// {
 		
-	}
+	// }
 	if (!goal)
 		goal = get_time(manager) + 1000;
 	if (goal <= get_time(manager))
@@ -662,6 +685,7 @@ void	cast_all_rays(t_cub_manager* manager)
 	i = -1;
 	while (++i < NUMBER_OF_RAYS)
 	{
+		// ray_angle = manager->player.rotation_angle + atan(( i - NUMBER_OF_RAYS / 2)) / ((WIDTH / 2.0) / tan(radians(FOV) / 2.0));
 		normalize_angle(&ray_angle);
 		manager->rays[i].rayAngle =  ray_angle;
 		__initialize_ray_attributes(&manager->rays[i]);
@@ -680,8 +704,9 @@ void	cast_all_rays(t_cub_manager* manager)
 			manager->door = manager->next;
 		}
 		cast(&manager->rays[i], manager);
+		ray_angle += angle_increment;
 
-		ray_angle+= angle_increment;
+
 	}
 	// render_3d_projected_walls(manager);
 	rendering_3d_walls(manager);
