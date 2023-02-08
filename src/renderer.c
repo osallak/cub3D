@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/08 17:07:12 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/09 00:35:51 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,19 +178,36 @@ void	draw_empty_rect(t_cub_manager *manager, t_draw_lines_struct lines)
 
 int controls(int key, t_cub_manager	*manager)
 {
-	double fx;
-	double fy;
-
 	if (key == 124)
 		manager->player.rotate = 1;
 	else if (key == 123)
 		manager->player.rotate = -1;
 	else if (key == 125)
-		manager->player.walk_direction = -1;
-	else if (key == 126)
 	{
-		manager->player.walk_direction = 1;
+		manager->player.walk_direction = -1;
 		manager->player.move_y = true;
+	}
+	if (key == 126)
+	{
+		manager->player.move_y = true;
+		manager->player.walk_direction = 1;
+	}
+	if (key == KEY_A)
+		manager->__move_slideways = -1;
+	if (key == KEY_D)
+		manager->__move_slideways = 1;
+	if (key == KEY_SPACE)
+	{
+		manager->weapons.gun_state = SHOOT;
+		manager->weapons.gun_frames = 3;
+		
+	}
+	if (key == KEY_R)
+	{
+		if (manager->weapons.gun_type == SNIPER)
+			manager->weapons.gun_type = PISTOL;
+		else
+			manager->weapons.gun_type = SNIPER;
 	}
 	if (key == 53)
 		exit(EXIT_SUCCESS);
@@ -213,44 +230,25 @@ int controls_up(int key, t_cub_manager	*manager)
 	else if (key == 125)
 	{
 		manager->player.move_y = false;
+		manager->player.walk_direction = 0;
 		// printf("hooray\n");
 		
 	}
 	else if (key == 126)
 	{
+		manager->player.walk_direction = 0;
 		manager->player.move_y = false;
 	}
-	if (key == 53)
-		exit(EXIT_SUCCESS);
+	if (key == KEY_A || key == KEY_D)
+		manager->__move_slideways = 0;
+	if (key == KEY_SPACE)
+	{
+		manager->weapons.gun_state = STAND;
+		manager->weapons.gun_frames = 0;
+	}
 	// draw(manager);
 	return 0;
 }
-
-
-// void draw_minimap(int player_x, int player_y, int map[][MAP_WIDTH], t_cub_manager *manager)
-// {
-//     // Clear the mini-map
-//     clear_window(manager, 0x000000);
-
-//     // Calculate the starting and ending x and y coordinates for the mini-map
-//     int start_x = max(player_x - MINIMAP_WIDTH / 2, 0);
-//     int end_x = min(player_x + MINIMAP_WIDTH / 2, MAP_WIDTH);
-//     int start_y = max(player_y - MINIMAP_HEIGHT / 2, 0);
-//     int end_y = min(player_y + MINIMAP_HEIGHT / 2, MAP_HEIGHT);
-
-//     // Draw the mini-map
-//     for (int i = start_y; i < end_y; i++)
-//     {
-//         for (int j = start_x; j < end_x; j++)
-//         {
-//             if (map[i][j] == 1)
-//                 cub_mlx_pixel_put(&manager->mlx_manager.img_data, MINIMAP_X + j - start_x, MINIMAP_Y + i - start_y, 0xFFFFFF);
-//         }
-//     }
-
-//     // Draw the player on the mini-map
-//     cub_mlx_pixel_put(&manager->mlx_manager.img_data, MINIMAP_X + player_x - start_x, MINIMAP_Y + player_y - start_y, 0xFF0000);
-// }
 
 
 void	draw_empty_circle(t_cub_manager *manager, t_draw_circle c)
@@ -266,16 +264,34 @@ void	draw_empty_circle(t_cub_manager *manager, t_draw_circle c)
 	}
 }
 
+void	move_slideways(t_cub_manager* manager, double *nx, double *ny, int slide_direction)
+{
+	double	rotation_angle;
+
+	normalize_angle(&rotation_angle);
+	// printf ("slide_direction: %d\n", slide_direction);
+	rotation_angle = manager->player.rotation_angle + radians(90) * slide_direction;
+	normalize_angle(&rotation_angle);
+	*nx = manager->player.x + cos(rotation_angle ) * manager->player.walk_speed * manager->time.delta_time ;
+	*ny = manager->player.y + sin(rotation_angle) * manager->player.walk_speed * manager->time.delta_time ;
+	printf (slide_direction == 1 ? "right" : "left");
+	printf("\n");
+}
+
 void	move_player(t_cub_manager *manager)
 {
 	double nx = 0;
 	double ny = 0;
 	bool increment = true;
-	if (manager->player.move_y)
+	if (manager->__move_slideways)
+		move_slideways(manager ,&nx, &ny, manager->__move_slideways);
+	else if (manager->player.move_y)
 	{
 		ny = manager->player.y + sin(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
-		nx = manager->player.x + cos(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
+		nx = manager->player.x + cos(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;	
 	}
+	// printf(manager->__move_slideways == 0 ? "nothing" : manager->__move_slideways == 1 ? "right" : "left");
+	// printf("nx: %f, ny: %f\n", nx, ny);
 	double da = nx;
 	double db = ny;
 	double dx = nx - manager->player.x;
@@ -351,21 +367,12 @@ int draw(t_cub_manager *manager)
 	manager->time.delta_time = (get_time(manager) - manager->time.lastTick) / 1000.0;
 	manager->time.lastTick = get_time(manager);
 	move_player(manager);
-	// printf("draw delta time: %lf\n", manager->time.delta_time);
-	// int		i;
-	// double	dist;
-	// double	height;
 	cast_all_rays(manager);
-	// draw_empty_rect(manager, (t_draw_lines_struct){{0,0},{10 * mini_x, 6 * mini_y}, {WIDTH, HEIGHT}, 0x00ffffff});
-	// draw_empty_rect(0, 0, 10 * mini_x, 6 * mini_y, WIDTH, HEIGHT, manager, 0x0000ff00);
 	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
 	mapsx = mapsx / TILE_SIZE * mini_x;
 	// double mapex = manager->player.x + 5.0 * TILE_SIZE;
 	double mapsy = manager->player.y - 3.0 * TILE_SIZE;
 	mapsy = mapsy / TILE_SIZE * mini_y;
-	// p.limits.x = manager->player.x + 5.0 * mini_x;
-	// p.limits.y = manager->player.y + 3.0 * mini_y;
-	// double mapey = manager->player.y + 3.0 * TILE_SIZE;
 	for (int i = 0;i < mini_y * 6;++i)
 	{
 		p.point.y = i;
@@ -900,6 +907,14 @@ void	__load_gun_textures(t_cub_manager* manager)
 		panic("failed to get data addr for gun textures");
 }
 
+int	__mouse_press(int button, int x, int y, t_cub_manager *manager)
+{
+	if (button == 1 && x > 0 && x < WIDTH && y > 0 && y < HEIGHT)
+		controls(KEY_SPACE, manager);
+	if (button == 2 && x > 0 && x < WIDTH && y > 0 && y < HEIGHT)
+		controls(KEY_R, manager);
+	return (0);
+}
 int render(t_map_manager *map_manager)
 {
 	int	i;
@@ -1003,12 +1018,14 @@ int render(t_map_manager *map_manager)
 	// TODO: change the texture before rendering the walls
 	manager.mouse_x = WIDTH / 2;
 	manager.mouse_move = false;
+	manager.__move_slideways = 0;
 	mlx_loop_hook(manager.mlx_manager.mlx, draw, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYUP, 1L<<0, controls_up, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, 6, 1, __mouse_move, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, 8,1, __leave_notify, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, 17, 0, __destroy, &manager);
+	mlx_hook(manager.mlx_manager.mlx_window, 4, 1, __mouse_press, &manager);
 	mlx_loop(manager.mlx_manager.mlx);
 	return (0);
 }

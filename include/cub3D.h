@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/08 17:10:10 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/09 00:17:37 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,7 +223,7 @@ typedef struct s_cub_manager
 	t_weapons		weapons;
 	int				mouse_x;
 	bool			mouse_move;//set this to false 
-	bool			__move_slideways;//if this is true do not change the rotation angle
+	int				__move_slideways;
 }	t_cub_manager;
 
 char	**ft_split(char *s, char c);
