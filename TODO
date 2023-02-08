@@ -7,3 +7,5 @@ X init ray directions (is facing up/down/right/left)
 - check if all the attributes are initialized
 - intersection not working properly in the joint of two walls
 X add parsing rule for doors
+
+- fix mouse error 

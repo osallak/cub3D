@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   renderer.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/07 16:44:43 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/08 17:07:12 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,22 +182,11 @@ int controls(int key, t_cub_manager	*manager)
 	double fy;
 
 	if (key == 124)
-	{
-		// puts("left");
 		manager->player.rotate = 1;
-	}
 	else if (key == 123)
-	{
-		// puts("right");
 		manager->player.rotate = -1;
-	}
 	else if (key == 125)
-	{
 		manager->player.walk_direction = -1;
-		manager->player.move_y = true;
-		// printf("hooray\n");
-		
-	}
 	else if (key == 126)
 	{
 		manager->player.walk_direction = 1;
@@ -205,7 +194,6 @@ int controls(int key, t_cub_manager	*manager)
 	}
 	if (key == 53)
 		exit(EXIT_SUCCESS);
-	// draw(manager);
 	return 0;
 }
 
@@ -323,8 +311,15 @@ void	move_player(t_cub_manager *manager)
 		// normalize_angle(&manager->player.rotation_angle);
 		manager->player.rotation_angle += (manager->player.rotation_speed * manager->time.delta_time * manager->player.rotate);
 		normalize_angle(&manager->player.rotation_angle);
-		
-	}		
+		// manager->mouse_move = false;
+		// manager->player.rotate = false;
+	}
+	if (manager->mouse_move)
+	{
+		controls_up(123, manager);
+		controls_up(124, manager);
+		manager->mouse_move = false;
+	}
 }
 
 int draw(t_cub_manager *manager)
@@ -341,7 +336,7 @@ int draw(t_cub_manager *manager)
 	// 	// exit(0);
 		manager->time.lastTick = get_time(manager);
 	}
-	// while (get_time(manager) < manager->time.lastTick + (1000.0 / 90.0))
+	// while (get_time(manager) < manager->time.lastTick + (1000.0 / 30.0))
 	// {
 		
 	// }
@@ -712,6 +707,61 @@ void	cast_all_rays(t_cub_manager* manager)
 	rendering_3d_walls(manager);
 }
 
+void	__render_ceiling(t_cub_manager* manager, int x, int wallTopPixel)
+{
+	t_draw_point_struct p;
+
+	p.limits.x = WIDTH;
+	p.limits.y = HEIGHT;
+	p.color = manager->map->c;
+	p.point.x = x;
+		for (int y = 0; y < wallTopPixel; y++)
+		{
+			p.point.y = y;
+			cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
+		}
+}
+
+void	__render_floor(t_cub_manager* manager, int x, int wallBottomPixel)
+{
+	t_draw_point_struct p;
+
+	p.limits.x = WIDTH;
+	p.limits.y = HEIGHT;
+	p.color = manager->map->f;
+	p.point.x = x;
+	for (int y = wallBottomPixel; y < HEIGHT; y++)
+	{
+		p.point.y = y;
+		cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
+	}
+}
+
+void	__render_gun(t_cub_manager* manager)
+{
+	int			x_start;
+	int			y_start;
+	t_texture	choosen_gun;
+
+	choosen_gun = manager->weapons.gun[manager->weapons.gun_type + manager->weapons.gun_state];
+	x_start = WIDTH / 2 - choosen_gun.wi / 2;
+	y_start = HEIGHT - choosen_gun.hi;
+	for (int y = y_start; y < y_start + choosen_gun.hi; y++)
+	{
+		for (int x = x_start; x < x_start + choosen_gun.wi; x++)
+		{
+			u_int32_t color = *(((int *)choosen_gun.tex_img_data.addr + ((y - y_start) * choosen_gun.wi + (x - x_start))));
+			if (color != 0)
+				cub_mlx_pixel_put(&manager->mlx_manager.img_data, (t_draw_point_struct){.point = {x, y}, .limits = {WIDTH, HEIGHT}, .color = color});
+		}
+	}
+	if (manager->weapons.gun_frames == 0)
+		manager->weapons.gun_state = STAND;
+	else{
+		manager->weapons.gun_frames--;
+	}
+}
+
 void	rendering_3d_walls(t_cub_manager* manager)
 {
 	t_draw_point_struct p;
@@ -795,6 +845,59 @@ void	rendering_3d_walls(t_cub_manager* manager)
 			}
 		}
     }
+	__render_gun(manager);
+}
+
+
+//TODO initialize mouse x
+int	__mouse_move(int x, int y, t_cub_manager *manager)
+{
+	if (x < 0 || x > WIDTH || y < 0 || y > HEIGHT)
+		return (EXIT_SUCCESS);
+	manager->mouse_move = true;
+	if (x < manager->mouse_x)
+		controls(KEY_LEFT, manager);
+	else if (x > manager->mouse_x)
+		controls(KEY_RIGHT, manager);
+	manager->mouse_x = x;
+	return (0);
+}
+
+int	__leave_notify(t_cub_manager *manager)
+{
+	(void)manager;
+	puts("leave notify");
+	return (0);
+}
+int	__destroy(void)
+{
+	exit(EXIT_SUCCESS);
+}
+
+void	__load_gun_textures(t_cub_manager* manager)
+{
+	//decoding gun textures
+	manager->weapons.gun[PISTOL].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, STANDING_PISTOL_PATH, &manager->weapons.gun[PISTOL].wi, &manager->weapons.gun[PISTOL].hi);
+	manager->weapons.gun[SNIPER].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, STANDING_SNIPER_PATH, &manager->weapons.gun[SNIPER].wi, &manager->weapons.gun[SNIPER].hi);
+	manager->weapons.gun[PISTOL + 1].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, SHOOTING_PISTOL_PATH, &manager->weapons.gun[PISTOL + 1].wi, &manager->weapons.gun[PISTOL + 1].hi);
+	manager->weapons.gun[SNIPER + 1].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, SHOOTING_SNIPER_PATH, &manager->weapons.gun[SNIPER + 1].wi, &manager->weapons.gun[SNIPER + 1].hi);
+	
+	//protection
+	if (!manager->weapons.gun[PISTOL].img || !manager->weapons.gun[SNIPER].img || !manager->weapons.gun[PISTOL + SHOOT].img || !manager->weapons.gun[SNIPER + SHOOT].img)
+		panic("failed to load gun textures");
+	//getting data addr
+	manager->weapons.gun[PISTOL].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[PISTOL].img, &manager->weapons.gun[PISTOL].tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[PISTOL].tex_img_data.line_length, &manager->weapons.gun[PISTOL].tex_img_data.endian);
+	manager->weapons.gun[SNIPER].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[SNIPER].img, &manager->weapons.gun[SNIPER].tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[SNIPER].tex_img_data.line_length, &manager->weapons.gun[SNIPER].tex_img_data.endian);
+	manager->weapons.gun[PISTOL + 1].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[PISTOL + 1].img, &manager->weapons.gun[PISTOL + 1].tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[PISTOL + 1].tex_img_data.line_length, &manager->weapons.gun[PISTOL + 1].tex_img_data.endian);
+	manager->weapons.gun[SNIPER + 1].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[SNIPER + 1].img, &manager->weapons.gun[SNIPER + 1].tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[SNIPER + 1].tex_img_data.line_length, &manager->weapons.gun[SNIPER + 1].tex_img_data.endian);
+
+	//protection
+	if (!manager->weapons.gun[PISTOL].tex_img_data.addr || !manager->weapons.gun[SNIPER].tex_img_data.addr || !manager->weapons.gun[PISTOL + 1].tex_img_data.addr || !manager->weapons.gun[SNIPER + 1].tex_img_data.addr)
+		panic("failed to get data addr for gun textures");
 }
 
 int render(t_map_manager *map_manager)
@@ -857,31 +960,36 @@ int render(t_map_manager *map_manager)
 	manager.mlx_manager.mlx_window = mlx_new_window(manager.mlx_manager.mlx, WIDTH, HEIGHT, "cub3D");
 	manager.mlx_manager.img_data.img = mlx_new_image(manager.mlx_manager.mlx, WIDTH, HEIGHT);
 	manager.mlx_manager.img_data.addr = mlx_get_data_addr(manager.mlx_manager.img_data.img, &manager.mlx_manager.img_data.bits_per_pixel, &manager.mlx_manager.img_data.line_length, &manager.mlx_manager.img_data.endian);
-	manager.map->wall_textures[NORTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_north.xpm", &manager.map->wall_textures[NORTH].wi, &manager.map->wall_textures[NORTH].hi);
+	manager.map->wall_textures[NORTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[NORTH].wi, &manager.map->wall_textures[NORTH].hi);
 	manager.map->wall_textures[NORTH].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[NORTH].img, &manager.map->wall_textures[NORTH].tex_img_data.bits_per_pixel,
 	&manager.map->wall_textures[NORTH].tex_img_data.line_length, &manager.map->wall_textures[NORTH].tex_img_data.endian);
 	// printf("%p\n", manager.map->wall_textures[NORTH].tex_img_data.addr);
 	//
-	manager.map->wall_textures[SOUTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_south.xpm", &manager.map->wall_textures[SOUTH].wi, &manager.map->wall_textures[SOUTH].hi);
+	manager.map->wall_textures[SOUTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[SOUTH].wi, &manager.map->wall_textures[SOUTH].hi);
 	// printf("%p\n", manager.map->wall_textures[SOUTH].tex_img_data.addr);
 	manager.map->wall_textures[SOUTH].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[SOUTH].img, &manager.map->wall_textures[SOUTH].tex_img_data.bits_per_pixel,
 	&manager.map->wall_textures[SOUTH].tex_img_data.line_length, &manager.map->wall_textures[SOUTH].tex_img_data.endian);
 	//
-	manager.map->wall_textures[EAST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_east.xpm", &manager.map->wall_textures[EAST].wi, &manager.map->wall_textures[EAST].hi);
+	manager.map->wall_textures[EAST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[EAST].wi, &manager.map->wall_textures[EAST].hi);
 	manager.map->wall_textures[EAST].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[EAST].img, &manager.map->wall_textures[EAST].tex_img_data.bits_per_pixel,
 	&manager.map->wall_textures[EAST].tex_img_data.line_length, &manager.map->wall_textures[EAST].tex_img_data.endian);
 	// printf("%p\n", manager.map->wall_textures[EAST].tex_img_data.addr);
 	//
-	manager.map->wall_textures[WEST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/wall_west.xpm", &manager.map->wall_textures[WEST].wi, &manager.map->wall_textures[WEST].hi);
+	manager.map->wall_textures[WEST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[WEST].wi, &manager.map->wall_textures[WEST].hi);
 	manager.map->wall_textures[WEST].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[WEST].img, &manager.map->wall_textures[WEST].tex_img_data.bits_per_pixel,
 	&manager.map->wall_textures[WEST].tex_img_data.line_length, &manager.map->wall_textures[WEST].tex_img_data.endian);
 	// printf("hre%d\n", manager.map->wall_textures[1].tex_img_data.addr);
 	// printf("%p\n", manager.map->wall_textures[WEST].tex_img_data.addr);
 	//
-	manager.map->wall_textures[DOOR].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/yakhoudr/cube3d/assets/door1.xpm", &manager.map->wall_textures[DOOR].wi, &manager.map->wall_textures[DOOR].hi);
+	manager.map->wall_textures[DOOR].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/door1.xpm", &manager.map->wall_textures[DOOR].wi, &manager.map->wall_textures[DOOR].hi);
 	manager.map->wall_textures[DOOR].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[DOOR].img, &manager.map->wall_textures[DOOR].tex_img_data.bits_per_pixel,
 	&manager.map->wall_textures[DOOR].tex_img_data.line_length, &manager.map->wall_textures[DOOR].tex_img_data.endian);
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
+	__load_gun_textures(&manager);
+	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
+	manager.weapons.gun_state = STAND;
+	manager.weapons.gun_frames = 0;
+	manager.weapons.gun_type = PISTOL;
 	// draw(&manager);
 	manager.door = 0x0;
 	manager.head = 0x0;
@@ -893,9 +1001,14 @@ int render(t_map_manager *map_manager)
 	// TODO: implement delta time
 	// TODO: minimap with variable size
 	// TODO: change the texture before rendering the walls
+	manager.mouse_x = WIDTH / 2;
+	manager.mouse_move = false;
 	mlx_loop_hook(manager.mlx_manager.mlx, draw, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYUP, 1L<<0, controls_up, &manager);
+	mlx_hook(manager.mlx_manager.mlx_window, 6, 1, __mouse_move, &manager);
+	mlx_hook(manager.mlx_manager.mlx_window, 8,1, __leave_notify, &manager);
+	mlx_hook(manager.mlx_manager.mlx_window, 17, 0, __destroy, &manager);
 	mlx_loop(manager.mlx_manager.mlx);
 	return (0);
 }

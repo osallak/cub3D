@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/07 16:45:32 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/08 17:10:10 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,14 +45,26 @@
 # define MINIMAP_X 10
 # define MINIMAP_Y 10
 # define NUMBER_OF_RAYS (WIDTH / WALL_STRIP_WIDTH)
+# define NUMBER_OF_RAYS (WIDTH / WALL_STRIP_WIDTH)
+# define AIM_SYMBOL_PATH "assets/target.xpm"
+# define SHOOTING_PISTOL_PATH "assets/hold.xpm"
+# define STANDING_PISTOL_PATH "assets/shoot.xpm" 
+# define STANDING_SNIPER_PATH "assets/shooting_sniper.xpm"//TODO: check this
+# define SHOOTING_SNIPER_PATH "assets/standing_sniper.xpm"
+# define SHOOT 0
+# define STAND 1
+#define PISTOL 2
+#define SNIPER 0
 # define mini_x 20
 # define mini_y 15
 # define VALID_ID "NSWEFC"
+
 typedef struct s_cub_time
 {
 	long long 	lastTick;
 	double 		delta_time;
 }	t_cub_time;
+
 typedef struct	s_img_data {
 	void	*img;
 	char	*addr;
@@ -77,6 +89,20 @@ enum {
 	ON_MOUSEMOVE = 6,
 	ON_EXPOSE = 12,
 	ON_DESTROY = 17
+};
+
+enum {
+	KEY_A = 0,
+	KEY_S = 1,
+	KEY_D = 2,
+	KEY_W = 13,
+	KEY_ESC = 53,
+	KEY_LEFT = 123,
+	KEY_RIGHT = 124,
+	KEY_UP = 126,
+	KEY_DOWN = 125,
+	KEY_SPACE = 49,
+	KEY_R = 15,
 };
 
 typedef struct s_pair_double
@@ -131,8 +157,8 @@ typedef struct s_map_manager
 	char		*so;
 	char		*we;
 	char		*ea;
-	int		f;
-	int		c;
+	int			f;
+	int			c;
 	char		c_player;
 	char		**map;
 	int			map_width;
@@ -174,17 +200,30 @@ typedef struct s_ray
     bool	isRayFacingRight;
 }	t_ray;
 
+typedef struct s_weapons
+{
+	t_texture	gun[4];
+	t_texture	aim_symbol;
+	int			gun_frames;
+	int			gun_state;
+	int			gun_type;//this can be PISTOL or SNSIPER
+}	t_weapons;
+
 typedef struct s_cub_manager
 {
 	t_map_manager	*map;
 	t_mlx_manager	mlx_manager;
 	t_player		player;
 	t_ray			*rays;
-	t_cub_time	time;
-	t_door	*head;
-	t_door	*next;
-	t_door	*tail;
-	t_door	*door;
+	t_cub_time		time;
+	t_door			*head;
+	t_door			*next;
+	t_door			*tail;
+	t_door			*door;
+	t_weapons		weapons;
+	int				mouse_x;
+	bool			mouse_move;//set this to false 
+	bool			__move_slideways;//if this is true do not change the rotation angle
 }	t_cub_manager;
 
 char	**ft_split(char *s, char c);
