@@ -274,8 +274,6 @@ void	move_player(t_cub_manager *manager)
 		ny = manager->player.y + sin(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
 		nx = manager->player.x + cos(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;	
 	}
-	// printf(manager->__move_slideways == 0 ? "nothing" : manager->__move_slideways == 1 ? "right" : "left");
-	// printf("nx: %f, ny: %f\n", nx, ny);
 	double da = nx;
 	double db = ny;
 	double dx = nx - manager->player.x;
@@ -301,18 +299,11 @@ void	move_player(t_cub_manager *manager)
 	{
 		manager->player.y = db;
 		manager->player.x = da;
-		// printf("%lf\n", (ny));
-		// puts("here");
-	
 	}
 	if (manager->player.rotate)
 	{
-		// puts("here\n");
-		// normalize_angle(&manager->player.rotation_angle);
 		manager->player.rotation_angle += (manager->player.rotation_speed * manager->time.delta_time * manager->player.rotate);
 		normalize_angle(&manager->player.rotation_angle);
-		// manager->mouse_move = false;
-		// manager->player.rotate = false;
 	}
 	if (manager->mouse_move)
 	{
@@ -429,6 +420,17 @@ bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 	double d = __distance(manager->player.x, manager->player.y, x, y);
 	return (manager->map->map[y_index][x_index] == '1' || (manager->map->map[y_index][x_index] == 'D' && (d > TILE_SIZE)));
 }
+
+// void	init_cast_helper_hor(t_cast_helper* helper, t_cub_manager *manager, t_ray *ray)
+// {
+
+// }
+// t_pair_double	get_hor_intersections(t_cub_manager* manager, t_ray* ray)
+// {
+// 	t_cast_helper helper;
+
+// 	init_cast_helper(&helper, manager, ray);
+// }
 
 void	cast(t_ray* ray, t_cub_manager* manager)
 {
@@ -590,8 +592,6 @@ void	__initialize_ray_attributes(t_ray *ray)
 	ray->isRayFacingLeft = !ray->isRayFacingRight;
 }
 
-
-
 double distance(double x, double y, double a, double b)
 {
 	return (sqrt((a - x) * (a - x) + (b - y) * (b - y)));
@@ -601,7 +601,7 @@ void	*xalloc(size_t size)
 {
 	void *ptr = malloc(size);
 	if (!ptr)
-		exit(1);
+		exit(EXIT_FAILURE);
 	return (ptr);
 }
 
@@ -619,6 +619,7 @@ t_door	*create_door(int x, int y)
 void	add_door(t_door **head, t_door *door, t_door **tail)
 {
 	t_door *tmp;
+
 	if (head == 0x0 || !door)
 		exit(1);
 	if (*head == 0x0 || *tail == 0x0)
@@ -637,8 +638,6 @@ void	add_door(t_door **head, t_door *door, t_door **tail)
 
 void delete_door(t_door **head, t_door **door, t_door *tail)
 {
-	// t_door *prev;
-	// t_door *next;
 	if (*door == *head)
 		*head = (*head)->next;
 	else if (*door == tail)
@@ -657,42 +656,39 @@ void delete_door(t_door **head, t_door **door, t_door *tail)
     *door = 0x0;
 }
 
+void	close_opened_doors(t_cub_manager *manager)
+{
+	manager->door = manager->head;
+	while (manager->door)
+	{
+		double dist = distance(manager->player.x, manager->player.y, manager->door->x * TILE_SIZE, manager->door->y * TILE_SIZE);
+		manager->next = manager->door->next;
+		if (dist > TILE_SIZE * 2)
+		{
+			manager->map->map[manager->door->y][manager->door->x] = 'D';
+			delete_door(&manager->head, &manager->door, manager->tail);
+		}
+		manager->door = manager->next;
+	}
+}
+
 void	cast_all_rays(t_cub_manager* manager)
 {
 	double	ray_angle;
 	int		i;
 	double	angle_increment;
 
-	// manager->rays = (t_ray *)malloc(NUMBER_OF_RAYS * sizeof(t_ray));//TODO allocate needed memory for each ray before calling this funcition
 	angle_increment = radians(FOV) / NUMBER_OF_RAYS;
 	ray_angle = manager->player.rotation_angle - (radians(FOV) / 2.0);
 	i = -1;
 	while (++i < NUMBER_OF_RAYS)
 	{
-		// ray_angle = manager->player.rotation_angle + atan(( i - NUMBER_OF_RAYS / 2)) / ((WIDTH / 2.0) / tan(radians(FOV) / 2.0));
 		normalize_angle(&ray_angle);
 		manager->rays[i].rayAngle =  ray_angle;
 		__initialize_ray_attributes(&manager->rays[i]);
-		manager->door = manager->head;
-		while (manager->door)
-		{
-			// printf("%d\t%d\n", manager->door->x, manager->door->y);
-			double dist = distance(manager->player.x, manager->player.y, manager->door->x * TILE_SIZE, manager->door->y * TILE_SIZE);
-			manager->next = manager->door->next;
-			if (dist > TILE_SIZE * 2)
-			{
-				// puts("here\n");
-				manager->map->map[manager->door->y][manager->door->x] = 'D';
-				delete_door(&manager->head, &manager->door, manager->tail);
-			}
-			manager->door = manager->next;
-		}
 		cast(&manager->rays[i], manager);
 		ray_angle += angle_increment;
-
-
 	}
-	// render_3d_projected_walls(manager);
 	rendering_3d_walls(manager);
 }
 
@@ -711,7 +707,7 @@ void	__render_ceiling(t_cub_manager* manager, int x, int wallTopPixel)
 		}
 }
 
-void	__render_floor(t_cub_manager* manager, int x, int wallBottomPixel)
+void	__render_floor(t_cub_manager* manager, int x, int y)
 {
 	t_draw_point_struct p;
 
@@ -719,11 +715,26 @@ void	__render_floor(t_cub_manager* manager, int x, int wallBottomPixel)
 	p.limits.y = HEIGHT;
 	p.color = manager->map->f;
 	p.point.x = x;
-	for (int y = wallBottomPixel; y < HEIGHT; y++)
+	while (y < HEIGHT)	
 	{
 		p.point.y = y;
 		cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
+		y++;
 	}
+}
+
+void	put_color_into_wall(t_cub_manager* manager, int x, int y, int color)
+{
+	t_draw_point_struct p;
+
+	if (color == 0)
+		return ;
+	p.limits.x = WIDTH;
+	p.limits.y = HEIGHT;
+	p.color = color;
+	p.point.x = x;
+	p.point.y = y;
+	cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
 }
 
 void	__render_gun(t_cub_manager* manager)
@@ -739,16 +750,15 @@ void	__render_gun(t_cub_manager* manager)
 	{
 		for (int x = x_start; x < x_start + choosen_gun.wi; x++)
 		{
-			u_int32_t color = *(((int *)choosen_gun.tex_img_data.addr + ((y - y_start) * choosen_gun.wi + (x - x_start))));
-			if (color != 0)
-				cub_mlx_pixel_put(&manager->mlx_manager.img_data, (t_draw_point_struct){.point = {x, y}, .limits = {WIDTH, HEIGHT}, .color = color});
+			u_int32_t color = *(((int *)choosen_gun.tex_img_data.addr+\
+			((y - y_start) * choosen_gun.wi + (x - x_start))));
+			put_color_into_wall(manager, x, y, color);	
 		}
 	}
 	if (manager->weapons.gun_frames == 0)
 		manager->weapons.gun_state = STAND;
-	else{
+	else
 		manager->weapons.gun_frames--;
-	}
 }
 
 void	rendering_3d_walls(t_cub_manager* manager)
@@ -761,19 +771,15 @@ void	rendering_3d_walls(t_cub_manager* manager)
 	double off_y = -1;
 	    for (int i = 0; i < NUMBER_OF_RAYS; i++) {
 		int tex = -1;
-			// printf("distance: %f\n", manager->rays[i].distance);
         double perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
-		// printf("%lf, %lf, (%s:%d)\n", manager->rays[i].distance, cos(manager->rays[i].rayAngle - manager->player.rotation_angle), __FILE__, __LINE__);
         double distanceProjPlane = (WIDTH / 2.0) / tan(radians(FOV) / 2.0);
         double projectedWallHeight = ((double)TILE_SIZE / perpDistance) * distanceProjPlane;
 
         double	wallStripHeight = projectedWallHeight;
 
         double wallTopPixel = (HEIGHT / 2.0) - (wallStripHeight / 2.0);
-        // wallTopPixel = wallTopPixel < 0 ? 0 : wallTopPixel;
 
         double wallBottomPixel = (HEIGHT / 2.0) + (wallStripHeight / 2.0);
-		// rendrering of the doors is dependent on the player position
 		int x = 0;
 		int y = 0;
 		if (manager->rays[i].wasHitVertical)
@@ -797,7 +803,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 				else
 					tex = DOOR;
 			}
-		}	
+		}
 		else
 		{
 			x = manager->rays[i].wallHitX / TILE_SIZE;
@@ -819,7 +825,6 @@ void	rendering_3d_walls(t_cub_manager* manager)
 			}
 			off_x = fmod(manager->rays[i].wallHitX, TILE_SIZE);
 		}
-		// printf("tex: %d\n", tex);
 		if (tex != -1)
 		{
 			off_x = off_x / TILE_SIZE * (double)manager->map->wall_textures[tex].wi;
@@ -837,8 +842,6 @@ void	rendering_3d_walls(t_cub_manager* manager)
 	__render_gun(manager);
 }
 
-
-//TODO initialize mouse x
 int	__mouse_move(int x, int y, t_cub_manager *manager)
 {
 	if (x < 0 || x > WIDTH || y < 0 || y > HEIGHT)
@@ -887,7 +890,8 @@ void	getting_textures_data(t_cub_manager* manager)
 		manager->map->wall_textures[i].tex_img_data.addr = mlx_get_data_addr\
 		(manager->map->wall_textures[i].img, &manager->map->wall_textures[i].\
 		tex_img_data.bits_per_pixel, &manager->map->wall_textures[i].\
-		tex_img_data.line_length, &manager->map->wall_textures[i].tex_img_data.endian);
+		tex_img_data.line_length, &manager->map->wall_textures[i].\
+		tex_img_data.endian);
 	}
 	protect_textures(manager, false);
 }
@@ -953,16 +957,17 @@ void	__get_gun_data(t_cub_manager* manager)
 void	__load_gun_textures(t_cub_manager* manager)
 {
 	manager->weapons.gun[PISTOL].img = mlx_xpm_file_to_image(manager->\
-	mlx_manager.mlx, STANDING_PISTOL_PATH, &manager->weapons.gun[PISTOL].wi,\
-	 &manager->weapons.gun[PISTOL].hi);
+	mlx_manager.mlx, STANDING_PISTOL_PATH, &manager->weapons.gun[PISTOL].\
+	wi, &manager->weapons.gun[PISTOL].hi);
 	manager->weapons.gun[SNIPER].img = mlx_xpm_file_to_image(manager->\
-	mlx_manager.mlx, STANDING_SNIPER_PATH, &manager->weapons.gun[SNIPER].wi,\
-	 &manager->weapons.gun[SNIPER].hi);
+	mlx_manager.mlx, STANDING_SNIPER_PATH, &manager->weapons.gun[SNIPER].\
+	wi, &manager->weapons.gun[SNIPER].hi);
 	manager->weapons.gun[PISTOL + 1].img = mlx_xpm_file_to_image(manager->\
-	mlx_manager.mlx, SHOOTING_PISTOL_PATH, &manager->weapons.gun[PISTOL + 1].wi,\
-	 &manager->weapons.gun[PISTOL + 1].hi);
+	mlx_manager.mlx, SHOOTING_PISTOL_PATH, &manager->weapons.gun[PISTOL + 1].\
+	wi, &manager->weapons.gun[PISTOL + 1].hi);
 	manager->weapons.gun[SNIPER + 1].img = mlx_xpm_file_to_image(manager->\
-	mlx_manager.mlx, SHOOTING_SNIPER_PATH, &manager->weapons.gun[SNIPER + 1].wi, &manager->weapons.gun[SNIPER + 1].hi);
+	mlx_manager.mlx, SHOOTING_SNIPER_PATH, &manager->weapons.gun[SNIPER + 1]\
+	.wi, &manager->weapons.gun[SNIPER + 1].hi);
 	protect_gun_textures(manager, true);
 	__get_gun_data(manager);
 }
@@ -1059,15 +1064,12 @@ int render(t_map_manager *map_manager)
 	init_mlx(&manager);
 	load_door_textures(&manager);
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
-	// __load_textures(&manager);
 	decoding_xpm_files(&manager);
-	// __load_gun_textures(&manager);
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	manager.weapons.gun_state = STAND;
 	manager.weapons.gun_frames = 0;
 	manager.weapons.gun_type = PISTOL;
 	__load_gun_textures(&manager);
-	// draw(&manager);
 	manager.door = 0x0;
 	manager.head = 0x0;
 	manager.tail = 0x0;
@@ -1075,9 +1077,6 @@ int render(t_map_manager *map_manager)
 	manager.player.move_x = false;
 	manager.player.move_y = false;
 	manager.player.rotate = false;
-	// TODO: implement delta time
-	// TODO: minimap with variable size
-	// TODO: change the texture before rendering the walls
 	manager.mouse_x = WIDTH / 2;
 	manager.mouse_move = false;
 	manager.__move_slideways = 0;

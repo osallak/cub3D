@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/09 04:51:12 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/09 06:35:45 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,38 @@ typedef struct s_cub_time
 	double 		delta_time;
 }	t_cub_time;
 
+typedef struct cast_result
+{
+	double		wall_hit_x;
+	double		wall_hit_y;
+	double		distance;
+	int			was_hit_vertical;
+	int			is_ray_facing_down;
+	int			is_ray_facing_up;
+	int			is_ray_facing_right;
+	int			is_ray_facing_left;
+	int			wall_hit_content;
+}	t_cast_result;
+
+typedef struct cast_helper
+{
+	double		xintercept;
+	double		yintercept;
+	double		xstep;
+	double		ystep;
+	double		next_horz_touch_x;
+	double		next_horz_touch_y;
+	double		next_vert_touch_x;
+	double		next_vert_touch_y;
+	double		horz_wall_hit_x;
+	double		horz_wall_hit_y;
+	double		vert_wall_hit_x;
+	double		vert_wall_hit_y;
+	double		horz_hit_distance;
+	double		vert_hit_distance;
+	bool		found_horz_wall_hit;
+	bool		found_vert_wall_hit;
+}	t_cast_helper;
 typedef struct	s_img_data {
 	void	*img;
 	char	*addr;
