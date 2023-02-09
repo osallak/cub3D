@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/04 11:37:48 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/09 11:38:00 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -573,7 +573,7 @@ void	parse_map_file(int map_fd, char *file)
 	char			**map;
 	unsigned int	map_lines;
 	char			*map_line;
-	t_map_manager	*map_manager = malloc(sizeof(t_map_manager));
+	t_map_manager	*map_manager = xalloc(sizeof(t_map_manager));
 	long			skip = 0;
 
 	init_map_manager(map_manager);

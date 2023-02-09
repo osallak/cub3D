@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/09 11:17:06 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/09 11:37:28 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,4 +274,5 @@ int		create_trgb(int t, int r, int g, int b);
 void	cubmlx_pixel_put(t_img_data *data, int x, int y, int color);
 size_t	ft_strlcpy(char *dst, char *src, size_t dstsize);
 int		draw(t_cub_manager * manager);
+void	*xalloc(size_t size); // the xalloc function allocates memory and if it fails it exits the program
 #endif

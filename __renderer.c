@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   __renderer.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/08 01:51:25 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/09 11:37:48 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -734,10 +734,10 @@ int render(t_map_manager *map_manager)
 	manager.map = map_manager;
 	manager.map->map_width = get_map_width(manager.map);
 	manager.map->map_height = get_map_height(manager.map);
-	char **map = malloc(sizeof(char *) * manager.map->map_height);
+	char **map = xalloc(sizeof(char *) * manager.map->map_height);
 	for (int i = 0; i < manager.map->map_height; ++i)
 	{
-		map[i] = malloc(manager.map->map_width);
+		map[i] = xalloc(manager.map->map_width);
 	}
 	for (int i = 0;i < manager.map->map_height; ++i)
 	{

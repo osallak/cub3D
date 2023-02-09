@@ -576,7 +576,6 @@ void	__initialize_ray_attributes(t_ray *ray)
 	ray->wallHitX = 0;
 	ray->wallHitY = 0;
 	ray->wasHitVertical = false;
-	//color here
 	if (ray->rayAngle > 0 && ray->rayAngle < M_PI)
 		ray->isRayFacingDown = true;
 	else
@@ -601,74 +600,6 @@ void	*xalloc(size_t size)
 		exit(EXIT_FAILURE);
 	return (ptr);
 }
-
-t_door	*create_door(int x, int y)
-{
-	t_door	*door;
-	door = xalloc(sizeof(t_door));
-	door->x = x;
-	door->y = y;
-	door->next = 0x0;
-	door->prev = 0x0;
-	return door;
-}
-
-void	add_door(t_door **head, t_door *door, t_door **tail)
-{
-	t_door *tmp;
-
-	if (head == 0x0 || !door)
-		exit(1);
-	if (*head == 0x0 || *tail == 0x0)
-	{
-		*head = door;
-		*tail = door;
-		return ;
-	}
-	tmp = *head;
-	while (tmp->next != 0x0)
-		tmp = tmp->next;
-	door->prev = tmp;
-	tmp->next = door;
-	*tail = door;
-}
-
-void delete_door(t_door **head, t_door **door, t_door *tail)
-{
-	if (*door == *head)
-		*head = (*head)->next;
-	else if (*door == tail)
-	{
-		(*door)->prev->next = 0x0;
-	}
-	else
-	{
-		if ((*door)->prev && (*door)->next)
-		{
-			(*door)->prev->next = (*door)->next;
-			(*door)->next->prev = (*door)->prev;
-		}
-	}
-	free(*door);
-    *door = 0x0;
-}
-
-void	close_opened_doors(t_cub_manager *manager)
-{
-	manager->door = manager->head;
-	while (manager->door)
-	{
-		double dist = distance(manager->player.x, manager->player.y, manager->door->x * TILE_SIZE, manager->door->y * TILE_SIZE);
-		manager->next = manager->door->next;
-		if (dist > TILE_SIZE * 2)
-		{
-			manager->map->map[manager->door->y][manager->door->x] = 'D';
-			delete_door(&manager->head, &manager->door, manager->tail);
-		}
-		manager->door = manager->next;
-	}
-}
-
 void	cast_all_rays(t_cub_manager* manager)
 {
 	double	ray_angle;
@@ -1012,10 +943,10 @@ int render(t_map_manager *map_manager)
 	manager.map = map_manager;
 	manager.map->map_width = get_map_width(manager.map);
 	manager.map->map_height = get_map_height(manager.map);
-	char **map = malloc(sizeof(char *) * manager.map->map_height);
+	char **map = xalloc(sizeof(char *) * manager.map->map_height);
 	for (int i = 0; i < manager.map->map_height; ++i)
 	{
-		map[i] = malloc(manager.map->map_width);
+		map[i] = xalloc(manager.map->map_width);
 	}
 	for (int i = 0;i < manager.map->map_height; ++i)
 	{
@@ -1060,9 +991,8 @@ int render(t_map_manager *map_manager)
 	}
 	init_mlx(&manager);
 	load_door_textures(&manager);
-	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	decoding_xpm_files(&manager);
-	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
+	manager.rays = xalloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	manager.weapons.gun_state = STAND;
 	manager.weapons.gun_frames = 0;
 	manager.weapons.gun_type = PISTOL;
