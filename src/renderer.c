@@ -52,10 +52,11 @@ int min(int a, int b)
 	    return a;
 }
 
-long long get_time(t_cub_manager *manager)
+long long get_time(t_cub_manager *manager)//TODO: refactor this
 {
 	struct timeval t;
 
+	(void)manager;
 	gettimeofday(&t, NULL);
 	return (t.tv_sec * 1000 + t.tv_usec / 1000);
 }
@@ -154,6 +155,7 @@ void	draw_full_rect(t_cub_manager *manager, t_draw_lines_struct lines)
 {
 	int i;
 
+	(void)manager;
 	i = -1;
 	while(++i < lines.end.y)
 	{
@@ -178,19 +180,19 @@ void	draw_empty_rect(t_cub_manager *manager, t_draw_lines_struct lines)
 
 int controls(int key, t_cub_manager	*manager)
 {
-	if (key == 124)
+	if (key == KEY_RIGHT)
 		manager->player.rotate = 1;
-	else if (key == 123)
+	else if (key == KEY_LEFT)
 		manager->player.rotate = -1;
-	else if (key == 125)
+	else if (key == KEY_W)
 	{
-		manager->player.walk_direction = -1;
+		manager->player.walk_direction = 1;
 		manager->player.move_y = true;
 	}
-	if (key == 126)
+	if (key == KEY_S)
 	{
 		manager->player.move_y = true;
-		manager->player.walk_direction = 1;
+		manager->player.walk_direction = -1;
 	}
 	if (key == KEY_A)
 		manager->__move_slideways = -1;
@@ -216,28 +218,12 @@ int controls(int key, t_cub_manager	*manager)
 
 int controls_up(int key, t_cub_manager	*manager)
 {
-	double fx;
-	double fy;
-
-	if (key == 124)
-	{
+	if (key == KEY_RIGHT || key == KEY_LEFT)
 		manager->player.rotate = 0;
-	}
-	else if (key == 123)
-	{
-		manager->player.rotate = 0;
-	}
-	else if (key == 125)
+	else if (key == KEY_W || key == KEY_S)
 	{
 		manager->player.move_y = false;
 		manager->player.walk_direction = 0;
-		// printf("hooray\n");
-		
-	}
-	else if (key == 126)
-	{
-		manager->player.walk_direction = 0;
-		manager->player.move_y = false;
 	}
 	if (key == KEY_A || key == KEY_D)
 		manager->__move_slideways = 0;
@@ -246,7 +232,6 @@ int controls_up(int key, t_cub_manager	*manager)
 		manager->weapons.gun_state = STAND;
 		manager->weapons.gun_frames = 0;
 	}
-	// draw(manager);
 	return 0;
 }
 
@@ -339,8 +324,6 @@ void	move_player(t_cub_manager *manager)
 
 int draw(t_cub_manager *manager)
 {
-	// double	angle;
-	int		num_of_rays;
 	static int frames;
 	static long goal;
 	t_draw_point_struct p;
@@ -360,7 +343,7 @@ int draw(t_cub_manager *manager)
 	if (goal <= get_time(manager))
 	{
 		goal = get_time(manager) + 1000;
-		printf("fps: %ld\n", frames);
+		printf("fps: %d\n", frames);
 		frames = 0;
 	}
 	manager->time.delta_time = (get_time(manager) - manager->time.lastTick) / 1000.0;
@@ -887,12 +870,10 @@ void	protect_textures(t_cub_manager* manager, bool flag)
 	i = -1;
 	while (++i < DOOR)
 	{
-		if (flag == true)
-			if (manager->map->wall_textures[i].img == NULL)
-				panic("Error: while decoding textures\n");
-		else
-			if (manager->map->wall_textures[i].tex_img_data.addr == NULL)
-				panic("Error\ncannot get texture data\n");
+		if (flag && manager->map->wall_textures[i].img == NULL)
+			panic("Error: while decoding textures\n");
+		if (!flag && manager->map->wall_textures[i].tex_img_data.addr == NULL)
+			panic("Error\ncannot get texture data\n");
 	}
 }
 
@@ -937,12 +918,10 @@ void	protect_gun_textures(t_cub_manager* manager, int flag)
 	i = -1;
 	while (++i < 4)
 	{
-		if (flag == true)
-			if (manager->weapons.gun[i].img == NULL)
-				panic("Error: while decoding gun textures\n");
-		else
-			if (manager->weapons.gun[i].tex_img_data.addr == NULL)
-				panic("Error\ncannot get gun texture data\n");
+		if (flag && manager->weapons.gun[i].img == NULL)
+			panic("Error: while decoding gun textures\n");
+		if (!flag && manager->weapons.gun[i].tex_img_data.addr == NULL)
+			panic("Error\ncannot get gun texture data\n");
 	}
 }
 
@@ -1000,7 +979,25 @@ int	__mouse_press(int button, int x, int y, t_cub_manager *manager)
 
 void	init_mlx(t_cub_manager* manager)
 {
-	
+	manager->mlx_manager.mlx = mlx_init();
+	manager->mlx_manager.mlx_window =\
+	mlx_new_window(manager->mlx_manager.mlx, WIDTH, HEIGHT, "cub3D");
+	manager->mlx_manager.img_data.img =\
+	mlx_new_image(manager->mlx_manager.mlx, WIDTH, HEIGHT);
+	manager->mlx_manager.img_data.addr =\
+	mlx_get_data_addr(manager->mlx_manager.img_data.img,\
+	&manager->mlx_manager.img_data.bits_per_pixel, &manager->\
+	mlx_manager.img_data.line_length, &manager->mlx_manager.img_data.endian);
+}
+
+void load_door_textures(t_cub_manager *manager)
+{
+	manager->map->wall_textures[DOOR].img = mlx_xpm_file_to_image(manager->mlx_manager.\
+	mlx, DOOR_PATH, &manager->map->wall_textures[DOOR].wi, &manager->map->wall_textures[DOOR].hi);
+	manager->map->wall_textures[DOOR].tex_img_data.addr = mlx_get_data_addr(manager->map->\
+	wall_textures[DOOR].img, &manager->map->wall_textures[DOOR].tex_img_data.bits_per_pixel,\
+	&manager->map->wall_textures[DOOR].tex_img_data.line_length, &manager->map->\
+	wall_textures[DOOR].tex_img_data.endian);
 }
 
 int render(t_map_manager *map_manager)
@@ -1010,7 +1007,6 @@ int render(t_map_manager *map_manager)
 	int	found_player;
 	t_cub_manager manager;
 
-	manager.mlx_manager.mlx = mlx_init();
 	manager.map = map_manager;
 	manager.map->map_width = get_map_width(manager.map);
 	manager.map->map_height = get_map_height(manager.map);
@@ -1060,13 +1056,8 @@ int render(t_map_manager *map_manager)
 		if (found_player)
 			break;
 	}
-
-	manager.mlx_manager.mlx_window = mlx_new_window(manager.mlx_manager.mlx, WIDTH, HEIGHT, "cub3D");
-	manager.mlx_manager.img_data.img = mlx_new_image(manager.mlx_manager.mlx, WIDTH, HEIGHT);
-	manager.mlx_manager.img_data.addr = mlx_get_data_addr(manager.mlx_manager.img_data.img, &manager.mlx_manager.img_data.bits_per_pixel, &manager.mlx_manager.img_data.line_length, &manager.mlx_manager.img_data.endian);
-	manager.map->wall_textures[DOOR].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/door1.xpm", &manager.map->wall_textures[DOOR].wi, &manager.map->wall_textures[DOOR].hi);
-	manager.map->wall_textures[DOOR].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[DOOR].img, &manager.map->wall_textures[DOOR].tex_img_data.bits_per_pixel,
-	&manager.map->wall_textures[DOOR].tex_img_data.line_length, &manager.map->wall_textures[DOOR].tex_img_data.endian);
+	init_mlx(&manager);
+	load_door_textures(&manager);
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	// __load_textures(&manager);
 	decoding_xpm_files(&manager);

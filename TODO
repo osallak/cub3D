@@ -9,3 +9,6 @@ X init ray directions (is facing up/down/right/left)
 X add parsing rule for doors
 
 - fix slideways movements 
+
+--save
+        "/Users/osallak/Desktop/normed-version-cub3d/assets/door1.xpm"

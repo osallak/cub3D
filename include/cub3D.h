@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/09 00:17:37 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/09 04:51:12 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@
 # define STANDING_PISTOL_PATH "assets/shoot.xpm" 
 # define STANDING_SNIPER_PATH "assets/shooting_sniper.xpm"//TODO: check this
 # define SHOOTING_SNIPER_PATH "assets/standing_sniper.xpm"
+# define DOOR_PATH "assets/door1.xpm"
 # define SHOOT 0
 # define STAND 1
 #define PISTOL 2
