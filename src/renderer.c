@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/06 10:26:42 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/09 00:35:51 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/09 02:37: by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,8 +274,7 @@ void	move_slideways(t_cub_manager* manager, double *nx, double *ny, int slide_di
 	normalize_angle(&rotation_angle);
 	*nx = manager->player.x + cos(rotation_angle ) * manager->player.walk_speed * manager->time.delta_time ;
 	*ny = manager->player.y + sin(rotation_angle) * manager->player.walk_speed * manager->time.delta_time ;
-	printf (slide_direction == 1 ? "right" : "left");
-	printf("\n");
+
 }
 
 void	move_player(t_cub_manager *manager)
@@ -881,31 +880,114 @@ int	__destroy(void)
 	exit(EXIT_SUCCESS);
 }
 
+void	protect_textures(t_cub_manager* manager, bool flag)
+{
+	int i;
+
+	i = -1;
+	while (++i < DOOR)
+	{
+		if (flag == true)
+			if (manager->map->wall_textures[i].img == NULL)
+				panic("Error: while decoding textures\n");
+		else
+			if (manager->map->wall_textures[i].tex_img_data.addr == NULL)
+				panic("Error\ncannot get texture data\n");
+	}
+}
+
+void	getting_textures_data(t_cub_manager* manager)
+{
+	int i;
+
+	i = -1;
+	while (++i < DOOR)
+	{
+		manager->map->wall_textures[i].tex_img_data.addr = mlx_get_data_addr\
+		(manager->map->wall_textures[i].img, &manager->map->wall_textures[i].\
+		tex_img_data.bits_per_pixel, &manager->map->wall_textures[i].\
+		tex_img_data.line_length, &manager->map->wall_textures[i].tex_img_data.endian);
+	}
+	protect_textures(manager, false);
+}
+
+void	decoding_xpm_files(t_cub_manager* manager)
+{
+	manager->map->wall_textures[NORTH].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, manager->map->no, &manager->map->wall_textures[NORTH].wi\
+	, &manager->map->wall_textures[NORTH].hi);
+	manager->map->wall_textures[SOUTH].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, manager->map->so, &manager->map->wall_textures[SOUTH].wi\
+	, &manager->map->wall_textures[SOUTH].hi);
+	manager->map->wall_textures[EAST].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, manager->map->ea, &manager->map->wall_textures[EAST].wi\
+	, &manager->map->wall_textures[EAST].hi);
+	manager->map->wall_textures[WEST].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, manager->map->we,\
+	 &manager->map->wall_textures[WEST].wi, &manager->map->\
+	 wall_textures[WEST].hi);
+	protect_textures(manager, true);
+	getting_textures_data(manager);
+}
+
+void	protect_gun_textures(t_cub_manager* manager, int flag)
+{
+	int	i;
+
+	i = -1;
+	while (++i < 4)
+	{
+		if (flag == true)
+			if (manager->weapons.gun[i].img == NULL)
+				panic("Error: while decoding gun textures\n");
+		else
+			if (manager->weapons.gun[i].tex_img_data.addr == NULL)
+				panic("Error\ncannot get gun texture data\n");
+	}
+}
+
+void	__get_gun_data(t_cub_manager* manager)
+{
+	manager->weapons.gun[PISTOL].tex_img_data.addr = mlx_get_data_addr\
+	(manager->weapons.gun[PISTOL].img, &manager->weapons.gun[PISTOL].\
+	tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[PISTOL].tex_img_data.line_length, &manager->\
+	weapons.gun[PISTOL].tex_img_data.endian);
+	manager->weapons.gun[SNIPER].tex_img_data.addr = mlx_get_data_addr\
+	(manager->weapons.gun[SNIPER].img, &manager->weapons.gun[SNIPER].\
+	tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[SNIPER].tex_img_data.line_length, &manager->\
+	weapons.gun[SNIPER].tex_img_data.endian);
+	manager->weapons.gun[PISTOL + 1].tex_img_data.addr = mlx_get_data_addr\
+	(manager->weapons.gun[PISTOL + 1].img, &manager->weapons.gun[PISTOL + 1].\
+	tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[PISTOL + 1].tex_img_data.line_length,\
+	&manager->weapons.gun[PISTOL + 1].tex_img_data.endian);
+	manager->weapons.gun[SNIPER + 1].tex_img_data.addr = mlx_get_data_addr\
+	(manager->weapons.gun[SNIPER + 1].img, &manager->weapons.gun[SNIPER + 1]\
+	.tex_img_data.bits_per_pixel,\
+	&manager->weapons.gun[SNIPER + 1].tex_img_data.line_length, \
+	&manager->weapons.gun[SNIPER + 1].tex_img_data.endian);
+	protect_gun_textures(manager, false);
+}
+
 void	__load_gun_textures(t_cub_manager* manager)
 {
-	//decoding gun textures
-	manager->weapons.gun[PISTOL].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, STANDING_PISTOL_PATH, &manager->weapons.gun[PISTOL].wi, &manager->weapons.gun[PISTOL].hi);
-	manager->weapons.gun[SNIPER].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, STANDING_SNIPER_PATH, &manager->weapons.gun[SNIPER].wi, &manager->weapons.gun[SNIPER].hi);
-	manager->weapons.gun[PISTOL + 1].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, SHOOTING_PISTOL_PATH, &manager->weapons.gun[PISTOL + 1].wi, &manager->weapons.gun[PISTOL + 1].hi);
-	manager->weapons.gun[SNIPER + 1].img = mlx_xpm_file_to_image(manager->mlx_manager.mlx, SHOOTING_SNIPER_PATH, &manager->weapons.gun[SNIPER + 1].wi, &manager->weapons.gun[SNIPER + 1].hi);
-	
-	//protection
-	if (!manager->weapons.gun[PISTOL].img || !manager->weapons.gun[SNIPER].img || !manager->weapons.gun[PISTOL + SHOOT].img || !manager->weapons.gun[SNIPER + SHOOT].img)
-		panic("failed to load gun textures");
-	//getting data addr
-	manager->weapons.gun[PISTOL].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[PISTOL].img, &manager->weapons.gun[PISTOL].tex_img_data.bits_per_pixel,\
-	&manager->weapons.gun[PISTOL].tex_img_data.line_length, &manager->weapons.gun[PISTOL].tex_img_data.endian);
-	manager->weapons.gun[SNIPER].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[SNIPER].img, &manager->weapons.gun[SNIPER].tex_img_data.bits_per_pixel,\
-	&manager->weapons.gun[SNIPER].tex_img_data.line_length, &manager->weapons.gun[SNIPER].tex_img_data.endian);
-	manager->weapons.gun[PISTOL + 1].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[PISTOL + 1].img, &manager->weapons.gun[PISTOL + 1].tex_img_data.bits_per_pixel,\
-	&manager->weapons.gun[PISTOL + 1].tex_img_data.line_length, &manager->weapons.gun[PISTOL + 1].tex_img_data.endian);
-	manager->weapons.gun[SNIPER + 1].tex_img_data.addr = mlx_get_data_addr(manager->weapons.gun[SNIPER + 1].img, &manager->weapons.gun[SNIPER + 1].tex_img_data.bits_per_pixel,\
-	&manager->weapons.gun[SNIPER + 1].tex_img_data.line_length, &manager->weapons.gun[SNIPER + 1].tex_img_data.endian);
-
-	//protection
-	if (!manager->weapons.gun[PISTOL].tex_img_data.addr || !manager->weapons.gun[SNIPER].tex_img_data.addr || !manager->weapons.gun[PISTOL + 1].tex_img_data.addr || !manager->weapons.gun[SNIPER + 1].tex_img_data.addr)
-		panic("failed to get data addr for gun textures");
+	manager->weapons.gun[PISTOL].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, STANDING_PISTOL_PATH, &manager->weapons.gun[PISTOL].wi,\
+	 &manager->weapons.gun[PISTOL].hi);
+	manager->weapons.gun[SNIPER].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, STANDING_SNIPER_PATH, &manager->weapons.gun[SNIPER].wi,\
+	 &manager->weapons.gun[SNIPER].hi);
+	manager->weapons.gun[PISTOL + 1].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, SHOOTING_PISTOL_PATH, &manager->weapons.gun[PISTOL + 1].wi,\
+	 &manager->weapons.gun[PISTOL + 1].hi);
+	manager->weapons.gun[SNIPER + 1].img = mlx_xpm_file_to_image(manager->\
+	mlx_manager.mlx, SHOOTING_SNIPER_PATH, &manager->weapons.gun[SNIPER + 1].wi, &manager->weapons.gun[SNIPER + 1].hi);
+	protect_gun_textures(manager, true);
+	__get_gun_data(manager);
 }
+
 
 int	__mouse_press(int button, int x, int y, t_cub_manager *manager)
 {
@@ -915,6 +997,12 @@ int	__mouse_press(int button, int x, int y, t_cub_manager *manager)
 		controls(KEY_R, manager);
 	return (0);
 }
+
+void	init_mlx(t_cub_manager* manager)
+{
+	
+}
+
 int render(t_map_manager *map_manager)
 {
 	int	i;
@@ -972,39 +1060,22 @@ int render(t_map_manager *map_manager)
 		if (found_player)
 			break;
 	}
+
 	manager.mlx_manager.mlx_window = mlx_new_window(manager.mlx_manager.mlx, WIDTH, HEIGHT, "cub3D");
 	manager.mlx_manager.img_data.img = mlx_new_image(manager.mlx_manager.mlx, WIDTH, HEIGHT);
 	manager.mlx_manager.img_data.addr = mlx_get_data_addr(manager.mlx_manager.img_data.img, &manager.mlx_manager.img_data.bits_per_pixel, &manager.mlx_manager.img_data.line_length, &manager.mlx_manager.img_data.endian);
-	manager.map->wall_textures[NORTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[NORTH].wi, &manager.map->wall_textures[NORTH].hi);
-	manager.map->wall_textures[NORTH].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[NORTH].img, &manager.map->wall_textures[NORTH].tex_img_data.bits_per_pixel,
-	&manager.map->wall_textures[NORTH].tex_img_data.line_length, &manager.map->wall_textures[NORTH].tex_img_data.endian);
-	// printf("%p\n", manager.map->wall_textures[NORTH].tex_img_data.addr);
-	//
-	manager.map->wall_textures[SOUTH].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[SOUTH].wi, &manager.map->wall_textures[SOUTH].hi);
-	// printf("%p\n", manager.map->wall_textures[SOUTH].tex_img_data.addr);
-	manager.map->wall_textures[SOUTH].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[SOUTH].img, &manager.map->wall_textures[SOUTH].tex_img_data.bits_per_pixel,
-	&manager.map->wall_textures[SOUTH].tex_img_data.line_length, &manager.map->wall_textures[SOUTH].tex_img_data.endian);
-	//
-	manager.map->wall_textures[EAST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[EAST].wi, &manager.map->wall_textures[EAST].hi);
-	manager.map->wall_textures[EAST].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[EAST].img, &manager.map->wall_textures[EAST].tex_img_data.bits_per_pixel,
-	&manager.map->wall_textures[EAST].tex_img_data.line_length, &manager.map->wall_textures[EAST].tex_img_data.endian);
-	// printf("%p\n", manager.map->wall_textures[EAST].tex_img_data.addr);
-	//
-	manager.map->wall_textures[WEST].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/high_quality_wall.xpm", &manager.map->wall_textures[WEST].wi, &manager.map->wall_textures[WEST].hi);
-	manager.map->wall_textures[WEST].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[WEST].img, &manager.map->wall_textures[WEST].tex_img_data.bits_per_pixel,
-	&manager.map->wall_textures[WEST].tex_img_data.line_length, &manager.map->wall_textures[WEST].tex_img_data.endian);
-	// printf("hre%d\n", manager.map->wall_textures[1].tex_img_data.addr);
-	// printf("%p\n", manager.map->wall_textures[WEST].tex_img_data.addr);
-	//
 	manager.map->wall_textures[DOOR].img = mlx_xpm_file_to_image(manager.mlx_manager.mlx, "/Users/osallak/Desktop/normed-version-cub3d/assets/door1.xpm", &manager.map->wall_textures[DOOR].wi, &manager.map->wall_textures[DOOR].hi);
 	manager.map->wall_textures[DOOR].tex_img_data.addr = mlx_get_data_addr(manager.map->wall_textures[DOOR].img, &manager.map->wall_textures[DOOR].tex_img_data.bits_per_pixel,
 	&manager.map->wall_textures[DOOR].tex_img_data.line_length, &manager.map->wall_textures[DOOR].tex_img_data.endian);
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
-	__load_gun_textures(&manager);
+	// __load_textures(&manager);
+	decoding_xpm_files(&manager);
+	// __load_gun_textures(&manager);
 	manager.rays = malloc(NUMBER_OF_RAYS * sizeof(t_ray));
 	manager.weapons.gun_state = STAND;
 	manager.weapons.gun_frames = 0;
 	manager.weapons.gun_type = PISTOL;
+	__load_gun_textures(&manager);
 	// draw(&manager);
 	manager.door = 0x0;
 	manager.head = 0x0;
