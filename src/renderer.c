@@ -363,19 +363,21 @@ int draw(t_cub_manager *manager)
 			cub_mlx_pixel_put(&manager->mlx_manager.img_data,p);
 		}
 	}
-	double angle = manager->player.rotation_angle - (radians(FOV / 2.0));
+	double angle = manager->player.rotation_angle - (radians((double) FOV / 2.0) );
 	t_draw_lines_struct line;
 	line.color = 0x0000ff00;
 	line.start.x = round(mini_x * 10 / 2.0);
 	line.start.y = round(mini_y * 6 / 2.0);
-	double incr = radians(FOV) / (mini_x * 10.0);
-	for (int i = 0;i < mini_x * 10;++i)
+	double incr = radians(FOV) / 3;
+	for (int i = 0;i < 3;++i)
 	{
-		line.end.x = line.start.x + cos(angle) * 30;
-		line.end.y = line.start.y + sin(angle) * 30;
+		// printf("%lf\t%lf\n", cos(angle), sin(angle));
+		line.end.x = line.start.x + cos(angle) * mini_x;
+		line.end.y = line.start.y + sin(angle) * mini_x;
+		if (dist(line.start.x, line.start.y, line.end.x, line.end.y) <= 2.0)
+			printf("%lf\n", dist(line.start.x, line.start.y, line.end.x, line.end.y) - 0.0);
 		draw_line(manager, line);
 		angle += incr;
-		normalize_angle(&angle);
 	}
 	// draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
 	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
@@ -421,156 +423,151 @@ bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
 	return (manager->map->map[y_index][x_index] == '1' || (manager->map->map[y_index][x_index] == 'D' && (d > TILE_SIZE)));
 }
 
-// void	init_cast_helper_hor(t_cast_helper* helper, t_cub_manager *manager, t_ray *ray)
-// {
+void intitialize_caster_var(t_cast_function *var)
+{
+	var->xintercept = 0.0;
+	var->yintercept = 0.0;
+	var->xstep = 0.0;
+	var->ystep = 0.0;
+	var->found_horz_wall_hit = false;
+	var->horz_wall_hit_x = 0;
+	var->horz_wall_hit_y = 0;
+	var->next_horz_touch_x = 0.0;
+	var->next_horz_touch_y = 0.0;
+	var->found_ver_hit = false;
+	var->ver_hit_x = 0;
+	var->ver_hit_y = 0;
+	var->next_ver_touch_x = 0.0;
+	var->next_ver_touch_y = 0.0;
+	var->horz_hit_distance = 0.0;
+	var->vert_hit_distance = 0.0;
+}
 
-// }
-// t_pair_double	get_hor_intersections(t_cub_manager* manager, t_ray* ray)
-// {
-// 	t_cast_helper helper;
+void	initialize_horizontal_check(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
+{
+	var->yintercept = floor(manager->player.y / TILE_SIZE) * (double)TILE_SIZE;
+	if (ray->isRayFacingDown)
+		var->yintercept += TILE_SIZE;
+	var->xintercept = manager->player.x + (var->yintercept - manager->player.y) / tan(ray->rayAngle);//?radians or degrees
+	var->ystep = TILE_SIZE;
+	if (ray->isRayFacingUp)
+		var->ystep *= -1;
+	var->xstep = TILE_SIZE / tan(ray->rayAngle);
+	if (ray->isRayFacingLeft && var->xstep > 0)
+		var->xstep *= -1;
+	if (ray->isRayFacingRight && var->xstep < 0)
+		var->xstep *= -1;
+	var->next_horz_touch_x = var->xintercept;
+	var->next_horz_touch_y = var->yintercept;
+}
 
-// 	init_cast_helper(&helper, manager, ray);
-// }
+void	check_horizontal_intersection(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
+{
+	while (var->next_horz_touch_x >= 0 && var->next_horz_touch_x < manager->map->map_width * TILE_SIZE && var->next_horz_touch_y >= 0 && var->next_horz_touch_y < manager->map->map_height * TILE_SIZE)
+	{
+		if (__inside_wall(var->next_horz_touch_x, var->next_horz_touch_y, ray->isRayFacingUp, manager))
+		{
+			var->found_horz_wall_hit = true;
+			var->horz_wall_hit_x = var->next_horz_touch_x;
+			var->horz_wall_hit_y = var->next_horz_touch_y;
+			break ;
+		}
+		var->next_horz_touch_x += var->xstep;
+		var->next_horz_touch_y += var->ystep;
+	}
+}
+
+void	initialize_vertical_check(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
+{
+	var->xintercept = floor(manager->player.x / TILE_SIZE) * TILE_SIZE;
+	if (ray->isRayFacingRight)
+		var->xintercept += TILE_SIZE;
+	var->yintercept = manager->player.y + (var->xintercept - manager->player.x) * tan(ray->rayAngle);
+	
+	var->xstep = TILE_SIZE;
+	if (ray->isRayFacingLeft)
+		var->xstep = -var->xstep;
+	var->ystep = TILE_SIZE * tan(ray->rayAngle);
+	if (ray->isRayFacingUp && var->ystep > 0)
+		var->ystep *= -1;
+	if (ray->isRayFacingDown && var->ystep < 0)
+		var->ystep *= -1;
+	
+	var->next_ver_touch_x = var->xintercept;
+	var->next_ver_touch_y = var->yintercept;
+}
+
+void	check_vertical_intersection(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
+{
+	while (var->next_ver_touch_x >= 0 && var->next_ver_touch_x <manager->map->map_width * TILE_SIZE && var->next_ver_touch_y >= 0 && var->next_ver_touch_y < manager->map->map_height * TILE_SIZE)
+	{
+		if (__inside_wall_ver(var->next_ver_touch_x, var->next_ver_touch_y, ray->isRayFacingLeft, manager))
+		{
+			var->found_ver_hit = true;
+			var->ver_hit_x = var->next_ver_touch_x;
+			var->ver_hit_y = var->next_ver_touch_y;
+			break ;
+		}
+		var->next_ver_touch_x += var->xstep;
+		var->next_ver_touch_y += var->ystep;
+	}
+}
+
+void calculate_ray_length(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
+{
+	var->horz_hit_distance = __distance(manager->player.x , manager->player.y ,var->horz_wall_hit_x, var->horz_wall_hit_y);
+	var->vert_hit_distance = __distance(manager->player.x , manager->player.y ,var->ver_hit_x, var->ver_hit_y);
+	ray->wasHitVertical = false;
+}
+
+void	choose_closest_intersection(t_ray *ray, t_cast_function *var)
+{
+	if (var->horz_hit_distance < var->vert_hit_distance)
+	{
+		ray->wallHitX = var->horz_wall_hit_x;
+		ray->wallHitY = var->horz_wall_hit_y;
+		ray->distance = var->horz_hit_distance;
+	}
+	else
+	{
+		ray->wallHitX = var->ver_hit_x;
+		ray->wallHitY = var->ver_hit_y;
+		ray->distance = var->vert_hit_distance;	
+		ray->wasHitVertical = true;
+	}
+}
+
+void	choose_horz_intersection(t_ray *ray, t_cast_function *var)
+{
+	ray->wallHitX = var->horz_wall_hit_x;
+	ray->wallHitY = var->horz_wall_hit_y;
+	ray->distance = var->horz_hit_distance;
+}
+void	choose_ver_intersection(t_ray *ray, t_cast_function *var)
+{
+	ray->wallHitX = var->ver_hit_x;
+	ray->wallHitY = var->ver_hit_y;
+	ray->distance = var->vert_hit_distance;
+	ray->wasHitVertical = true;		
+}
 
 void	cast(t_ray* ray, t_cub_manager* manager)
 {
+	t_cast_function	var;
+
+	intitialize_caster_var(&var);
 	normalize_angle(&ray->rayAngle);
-	double	xintercept;
-	double	yintercept;
-	double	xstep, ystep;
-
-	bool found_horz_wall_hit = false;
-	double	horz_wall_hit_x = 0;
-	double	horz_wall_hit_y = 0;
-	// double horz_wall_color = 0;
-	
-	//fid the y-coordinates of the closest horiz grid intersection
-	yintercept = floor(manager->player.y / TILE_SIZE) * (double)TILE_SIZE;
-	if (ray->isRayFacingDown)
-		yintercept += TILE_SIZE;
-	// if (tan(ray->rayAngle) != 0.0)
-	// {
-		xintercept = manager->player.x + (yintercept - manager->player.y) / tan(ray->rayAngle);//?radians or degrees
-		ystep = TILE_SIZE;
-		if (ray->isRayFacingUp)
-			ystep *= -1;
-		
-		xstep = TILE_SIZE / tan(ray->rayAngle);//radians or degrees
-		if (ray->isRayFacingLeft && xstep > 0)
-			xstep *= -1;
-		if (ray->isRayFacingRight && xstep < 0)
-			xstep *= -1;
-	// }
-		
-	double next_horz_touch_x = xintercept;
-	double next_horz_touch_y = yintercept;
-
-	
-    // Increment xstep and ystep until we find a wall
-	while (next_horz_touch_x >= 0 && next_horz_touch_x < manager->map->map_width * TILE_SIZE && next_horz_touch_y >= 0 && next_horz_touch_y < manager->map->map_height * TILE_SIZE)
-	{
-		if (__inside_wall(next_horz_touch_x, next_horz_touch_y, ray->isRayFacingUp, manager))
-		{
-			found_horz_wall_hit = true;
-			horz_wall_hit_x = next_horz_touch_x;
-			horz_wall_hit_y = next_horz_touch_y;
-			// horz_wall_color = content; //don't forget that
-			// printf("found horizontal wall\n-----------------------------------\n\n");
-			break ;
-		}
-		// printf("nexthx: %lf nexhy: %lf (%s:%d)\n-------------------\n", next_horz_touch_x, next_horz_touch_y, __FILE__, __LINE__);
-		next_horz_touch_x += xstep;
-		next_horz_touch_y += ystep;
-	}
-
-	//vertical ray-grid intersection code
-	
-	bool found_ver_hit = false;
-	double ver_hit_x = 0;
-	double ver_hit_y = 0;
-	//don't forget the color
-	
-	xintercept = floor(manager->player.x / TILE_SIZE) * TILE_SIZE;
-	if (ray->isRayFacingRight)
-		xintercept += TILE_SIZE;
-	yintercept = manager->player.y + (xintercept - manager->player.x) * tan(ray->rayAngle);
-	
-	xstep = TILE_SIZE;
-	if (ray->isRayFacingLeft)
-		xstep = -xstep;
-	ystep = TILE_SIZE * tan(ray->rayAngle);
-	if (ray->isRayFacingUp && ystep > 0)
-		ystep *= -1;
-	if (ray->isRayFacingDown && ystep < 0)
-		ystep *= -1;
-	
-	double next_ver_touch_x = xintercept;
-	double next_ver_touch_y = yintercept;
-	
-	while (next_ver_touch_x >= 0 && next_ver_touch_x <manager->map->map_width * TILE_SIZE && next_ver_touch_y >= 0 && next_ver_touch_y < manager->map->map_height * TILE_SIZE)
-	{
-		if (__inside_wall_ver(next_ver_touch_x, next_ver_touch_y, ray->isRayFacingLeft, manager))
-		{
-			found_ver_hit = true;
-			ver_hit_x = next_ver_touch_x;
-			ver_hit_y = next_ver_touch_y;
-			//get the color here
-			// printf("found vertical wall\n-----------------------------------\n");
-			break ;
-		}
-		// printf("nextvx: %lf nexvy: %lf (%s:%d)\n-------------------\n", next_ver_touch_x, next_ver_touch_y, __FILE__, __LINE__);
-		next_ver_touch_x += xstep;
-		next_ver_touch_y += ystep;
-	}
-	
-
-	//calculate both hor and vert distances and choose the smallest value
-	
-	double horz_hit_distance = 0.0;
-	double vert_hit_distance = 0.0;
-	// if (found_horz_wall_hit)
-		horz_hit_distance = __distance(manager->player.x , manager->player.y ,horz_wall_hit_x, horz_wall_hit_y);
-	// else
-	// 	horz_hit_distance = 3.4E+38;//double max value
-	// if (found_ver_hit)
-		vert_hit_distance = __distance(manager->player.x , manager->player.y ,ver_hit_x, ver_hit_y);
-	// else
-	// 	vert_hit_distance = 3.4E+38;//double max value
-	
-	// printf("ver_dis: %f\thor_dis: %f       (renderer.c:461)\n", vert_hit_distance, horz_hit_distance);
-	ray->wasHitVertical = false;
-	if (found_horz_wall_hit && found_ver_hit)
-	{
-		if (horz_hit_distance < vert_hit_distance)
-		{
-			ray->wallHitX = horz_wall_hit_x;
-			ray->wallHitY = horz_wall_hit_y;
-			ray->distance = horz_hit_distance;
-		}
-		else
-		{
-			ray->wallHitX = ver_hit_x;
-			ray->wallHitY = ver_hit_y;
-			ray->distance = vert_hit_distance;	
-			ray->wasHitVertical = true;
-		}
-		// printf("bjoj\n");
-	}
-	else if (found_horz_wall_hit)
-	{
-		ray->wallHitX = horz_wall_hit_x;
-		ray->wallHitY = horz_wall_hit_y;
-		ray->distance = horz_hit_distance;
-		// printf("horz\n");	
-	}
-	else if (found_ver_hit)
-	{
-		// printf("ver\n");
-		ray->wallHitX = ver_hit_x;
-		ray->wallHitY = ver_hit_y;
-		ray->distance = vert_hit_distance;
-		ray->wasHitVertical = true;		
-	}
+	initialize_horizontal_check(ray, manager, &var);
+	check_horizontal_intersection(ray, manager, &var);
+	initialize_vertical_check(ray, manager, &var);
+	check_vertical_intersection(ray, manager, &var);	
+	calculate_ray_length(ray, manager, &var);
+	if (var.found_horz_wall_hit && var.found_ver_hit)
+		choose_closest_intersection(ray, &var);
+	else if (var.found_horz_wall_hit)
+		choose_horz_intersection(ray, &var);
+	else if (var.found_ver_hit)
+		choose_ver_intersection(ray, &var);
 }
 
 void	__initialize_ray_attributes(t_ray *ray)
