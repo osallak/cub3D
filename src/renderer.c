@@ -22,7 +22,6 @@ double radians(double angle)
 
 inline double dist(int x1, int x2, int y1, int y2)
 {
-    // Calculating distance
     return sqrt(pow(x2 - x1, 2)
                 + pow(y2 - y1, 2) * 1.0);
 }
@@ -31,62 +30,38 @@ void	cub_mlx_pixel_put(t_img_data *data, t_draw_point_struct p)
 {
 	char	*dst;
 
-	if (p.point.x < 0 || p.point.x >= p.limits.x || p.point.y < 0 || p.point.y >= p.limits.y)
+	if (p.point.x < 0 || p.point.x >= p.limits.x\
+	|| p.point.y < 0 || p.point.y >= p.limits.y)
 		return ;
-	dst = data->addr + ((int)p.point.y * data->line_length + (int)p.point.x * (data->bits_per_pixel / 8));
+	dst = data->addr + ((int)p.point.y * data->line_length\
+			+ (int)p.point.x * (data->bits_per_pixel / 8));
 	*(unsigned int*)dst = p.color;
 }
 
-int max(int a, int b)
-{
-    if (a > b)
-        return a;
-    else
-	    return b;
-}
-int min(int a, int b)
-{
-    if (a > b)
-        return b;
-    else
-	    return a;
-}
-
-long long get_time(t_cub_manager *manager)//TODO: refactor this
+long long get_time(void)
 {
 	struct timeval t;
 
-	(void)manager;
 	gettimeofday(&t, NULL);
 	return (t.tv_sec * 1000 + t.tv_usec / 1000);
 }
 
 void draw_line(t_cub_manager *manager, t_draw_lines_struct lines)
 {
-  // Calculate the difference between the starting and ending x and y coordinates
   double dx = lines.end.x - lines.start.x;
   double dy = lines.end.y - lines.start.y;
 
-  // Determine the number of steps required to draw the line
-  double steps = fabs(dx) > fabs(dy) ? fabs(dx) : fabs(dy);
+  double steps = fmax(fabs(dx), fabs(dy));
   int st = round(steps);
-
-  // Calculate the x and y increments for each step
   double xIncrement = dx / (steps);
   double yIncrement = dy / (steps);
-
-  // Set the starting x and y coordinates
   t_draw_point_struct coor;
   coor.point.x = lines.start.x;
   coor.point.y = lines.start.y;
   coor.limits = lines.limits;
   coor.color = lines.color;
-  // Loop through the number of steps required to draw the line
   for (int i = 0; i <= st; ++i) {
-    // Set the color of the pixel at (x, y)
     cub_mlx_pixel_put(&manager->mlx_manager.img_data, coor);
-
-    // Increment the x and y coordinates
     coor.point.x += xIncrement;
     coor.point.y += yIncrement;
   }
@@ -102,9 +77,9 @@ void normalize_angle(double *ang)
 
 void clear_window(t_cub_manager * manager, int color, int lx, int ly)
 {
-	int tmp;
+	int 				tmp;
+	t_draw_point_struct	p;
 
-	t_draw_point_struct p;
 	p.point.x = 0;
 	p.point.y = 0;
 	tmp = p.point.x;
@@ -149,33 +124,6 @@ long	get_map_height(t_map_manager *map_manager)
 	while (map_manager->map[i])
 		++i;
 	return (i);
-}
-
-void	draw_full_rect(t_cub_manager *manager, t_draw_lines_struct lines)
-{
-	int i;
-
-	(void)manager;
-	i = -1;
-	while(++i < lines.end.y)
-	{
-		// draw_line(x , y + i, x + width, y + i, lx, ly, manager, color);
-		lines.start.y += i;
-		// lines.end.x += width;
-		lines.end.y += i;
-	}
-}
-
-void	draw_empty_rect(t_cub_manager *manager, t_draw_lines_struct lines)
-{
-	draw_line(manager, lines);
-	draw_line(manager, lines);
-	draw_line(manager, lines);
-	draw_line(manager, lines);
-	// draw_line(x, y, x + width, y, lx, ly, manager, color);
-	// draw_line(x, y, x, y + height, lx, ly, manager, color);
-	// draw_line(x, y + height, x + width, y + height,lx, ly, manager, color);
-	// draw_line(x + width, y, x + width, y + height,lx, ly, manager, color);
 }
 
 int controls(int key, t_cub_manager	*manager)
@@ -235,110 +183,110 @@ int controls_up(int key, t_cub_manager	*manager)
 	return 0;
 }
 
-
-void	draw_empty_circle(t_cub_manager *manager, t_draw_circle c)
-{
-	t_draw_point_struct p;
-	p.point.x = c.center.x;
-	p.point.y = c.center.y;
-	p.color = c.color;
-	for (int i = 0;i < 360;++i)
-	{
-		// cub_mlx_pixel_put(&manager->mlx_manager.img_data, c.center.x + c.radius * cos(radians(i)), y + radius * sin(radians(i)), lx, ly, color);
-		cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
-	}
-}
-
-void	move_slideways(t_cub_manager* manager, double *nx, double *ny, int slide_direction)
+//sd stands for slide direction
+void	move_slideways(t_cub_manager* manager, double *nx, double *ny, int sd)
 {
 	double	rotation_angle;
 
 	normalize_angle(&rotation_angle);
-	// printf ("slide_direction: %d\n", slide_direction);
-	rotation_angle = manager->player.rotation_angle + radians(90) * slide_direction;
+	rotation_angle = manager->player.rotation_angle\
+	+ radians(90) * sd;
 	normalize_angle(&rotation_angle);
-	*nx = manager->player.x + cos(rotation_angle ) * manager->player.walk_speed * manager->time.delta_time ;
-	*ny = manager->player.y + sin(rotation_angle) * manager->player.walk_speed * manager->time.delta_time ;
+	*nx = manager->player.x + cos(rotation_angle )\
+	* manager->player.walk_speed * manager->time.delta_time ;
+	*ny = manager->player.y + sin(rotation_angle)\
+	* manager->player.walk_speed * manager->time.delta_time ;
+}
 
+void update_player_position(t_cub_manager* manager, t_pair_double d_b_a, bool flag)
+{
+	if (!flag)
+		return ;
+	manager->player.y = d_b_a.y;
+	manager->player.x = d_b_a.x;
+}
+
+t_pair_double	get_x_y_increment(t_cub_manager* manager, double nx,\
+double ny, int *st)
+{
+	t_pair_double	increment_xy;
+	t_pair_double	dxy;
+	double 			steps;
+
+	dxy.x = nx - manager->player.x;
+	dxy.y = ny - manager->player.y;
+	steps = fmax(fabs(dxy.x), fabs(dxy.y));
+	*st = round(steps);
+	increment_xy.x = dxy.x / (steps);
+	increment_xy.y = dxy.y / (steps);
+	return (increment_xy);
+}
+
+void	move_player_dda(t_cub_manager* manager, double nx, double ny)
+{
+	t_pair_double d_b_a;
+	bool increment;
+	t_pair_double increment_xy;
+	int 	st;
+	int		i;
+
+	d_b_a.x = nx;
+	d_b_a.y = ny;
+	increment = true;
+	increment_xy = get_x_y_increment(manager, nx, ny, &st);
+	i = -1;
+  	while (++i < st)
+	{
+		if (nx / TILE_SIZE >= 0 && nx / TILE_SIZE < manager->map->map_width\
+		&& ny / TILE_SIZE >= 0 && ny / TILE_SIZE < manager->map->map_height\
+		&& manager->map->map[(int)ny / TILE_SIZE][(int)nx / TILE_SIZE] == '1')
+			increment = false;
+		nx += increment_xy.x;
+		ny += increment_xy.y;
+	}
+	update_player_position(manager, d_b_a, increment);
+}
+
+void rotate_player(t_cub_manager *manager)
+{
+	if (manager->player.rotate)
+	{
+		manager->player.rotation_angle += manager->player.rotate\
+		* manager->player.rotation_speed * manager->time.delta_time;
+		normalize_angle(&manager->player.rotation_angle);
+	}
 }
 
 void	move_player(t_cub_manager *manager)
 {
-	double nx = 0;
-	double ny = 0;
-	bool increment = true;
+	double nx;
+	double ny;
+
+	nx = 0;
+	ny = 0;
 	if (manager->__move_slideways)
-		move_slideways(manager ,&nx, &ny, manager->__move_slideways);
+		move_slideways(manager, &nx, &ny, manager->__move_slideways);
 	else if (manager->player.move_y)
 	{
-		ny = manager->player.y + sin(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;
-		nx = manager->player.x + cos(manager->player.rotation_angle) * manager->player.walk_direction * manager->player.walk_speed * manager->time.delta_time;	
+		ny = manager->player.y + sin(manager->player.rotation_angle)\
+		* manager->player.walk_direction * manager->player.walk_speed\
+		* manager->time.delta_time;
+		nx = manager->player.x + cos(manager->player.rotation_angle)\
+		* manager->player.walk_direction * manager->player.walk_speed\
+		* manager->time.delta_time;	
 	}
-	double da = nx;
-	double db = ny;
-	double dx = nx - manager->player.x;
-	double dy = ny - manager->player.y;
-	double steps = fabs(dx) > fabs(dy) ? fabs(dx) : fabs(dy);
-	int st = round(steps);
-
-	// Calculate the x and y increments for each step
-	double xIncrement = dx / (steps);
-	double yIncrement = dy / (steps);
-  	for (int i = 0; i <= st; ++i) {	
-		int x = nx / TILE_SIZE;
-		int y = ny / TILE_SIZE;
-		if (x >= 0 && x < manager->map->map_width && y >= 0 && y < manager->map->map_height && manager->map->map[y][x] == '1')
-		{
-			increment = false;
-			false;
-		}
-		nx += xIncrement;
-		ny += yIncrement;
-	}
-	if (increment)
-	{
-		manager->player.y = db;
-		manager->player.x = da;
-	}
-	if (manager->player.rotate)
-	{
-		manager->player.rotation_angle += (manager->player.rotation_speed * manager->time.delta_time * manager->player.rotate);
-		normalize_angle(&manager->player.rotation_angle);
-	}
-	if (manager->mouse_move)
-	{
-		controls_up(123, manager);
-		controls_up(124, manager);
-		manager->mouse_move = false;
-	}
+	move_player_dda(manager, nx, ny);
+	rotate_player(manager);
 }
 
 int draw(t_cub_manager *manager)
 {
-	static int frames;
-	static long goal;
 	t_draw_point_struct p;
 
 	if (manager->time.lastTick == 0)
-	{
-	// 	// puts("here\n");
-	// 	// exit(0);
-		manager->time.lastTick = get_time(manager);
-	}
-	// while (get_time(manager) < manager->time.lastTick + (1000.0 / 30.0))
-	// {
-		
-	// }
-	if (!goal)
-		goal = get_time(manager) + 1000;
-	if (goal <= get_time(manager))
-	{
-		goal = get_time(manager) + 1000;
-		printf("fps: %d\n", frames);
-		frames = 0;
-	}
-	manager->time.delta_time = (get_time(manager) - manager->time.lastTick) / 1000.0;
-	manager->time.lastTick = get_time(manager);
+		manager->time.lastTick = get_time();
+	manager->time.delta_time = (get_time() - manager->time.lastTick) / 1000.0;
+	manager->time.lastTick = get_time();
 	move_player(manager);
 	cast_all_rays(manager);
 	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
@@ -371,7 +319,6 @@ int draw(t_cub_manager *manager)
 	double incr = radians(FOV) / 3;
 	for (int i = 0;i < 3;++i)
 	{
-		// printf("%lf\t%lf\n", cos(angle), sin(angle));
 		line.end.x = line.start.x + cos(angle) * mini_x;
 		line.end.y = line.start.y + sin(angle) * mini_x;
 		if (dist(line.start.x, line.start.y, line.end.x, line.end.y) <= 2.0)
@@ -379,12 +326,7 @@ int draw(t_cub_manager *manager)
 		draw_line(manager, line);
 		angle += incr;
 	}
-	// draw_line(round(mini_x * 10 / 2.0), round(mini_y * 6 / 2.0), mini_x * 10 / 2.0 + cos(manager->player.rotation_angle) * 10, mini_y * 6 / 2.0 + sin(manager->player.rotation_angle) * 10, mini_x * 10, mini_y * 6, manager, 0x00ff0000);
-	// // draw_line(mini_x * 15 / 2.0, mini_y * 10 / 2.0, mini_x * 15 / 2.0 + cos(manager->player.rotation_angle) * 15, mini_y * 10 / 2.0 + sin(manager->player.rotation_angle) * 15, manager, 0x00ff0000);
-	// angle = manager->player.rotation_angle - (radians(FOV / 2.0));
-	// num_of_rays = WIDTH / (double) (WALL_STRIP_WIDTH);
 	mlx_put_image_to_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->mlx_manager.img_data.img, 0, 0);
-	++frames;
 	clear_window(manager, 0x00000000, WIDTH, HEIGHT);
 	return 0;
 }
@@ -697,7 +639,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 	p.color = 0x00ffffff;
 	double off_x = -1;
 	double off_y = -1;
-	    for (int i = 0; i < NUMBER_OF_RAYS; i++) {
+	for (int i = 0; i < NUMBER_OF_RAYS; i++) {
 		int tex = -1;
         double perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
         double distanceProjPlane = (WIDTH / 2.0) / tan(radians(FOV) / 2.0);
@@ -756,6 +698,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 		if (tex != -1)
 		{
 			off_x = off_x / TILE_SIZE * (double)manager->map->wall_textures[tex].wi;
+			__render_ceiling(manager, i, wallTopPixel);
 			for (int j = wallTopPixel; j < wallBottomPixel - 1;++j)
 			{
 				off_y = (j - (int)wallTopPixel) / wallStripHeight * manager->map->wall_textures[tex].hi;
@@ -765,6 +708,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 				cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
 
 			}
+			__render_floor(manager, i, wallBottomPixel);
 		}
     }
 	__render_gun(manager);
@@ -783,12 +727,7 @@ int	__mouse_move(int x, int y, t_cub_manager *manager)
 	return (0);
 }
 
-int	__leave_notify(t_cub_manager *manager)
-{
-	(void)manager;
-	puts("leave notify");
-	return (0);
-}
+
 int	__destroy(void)
 {
 	exit(EXIT_SUCCESS);
@@ -1011,7 +950,6 @@ int render(t_map_manager *map_manager)
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYDOWN, 1L<<0, controls, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, ON_KEYUP, 1L<<0, controls_up, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, 6, 1, __mouse_move, &manager);
-	mlx_hook(manager.mlx_manager.mlx_window, 8,1, __leave_notify, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, 17, 0, __destroy, &manager);
 	mlx_hook(manager.mlx_manager.mlx_window, 4, 1, __mouse_press, &manager);
 	mlx_loop(manager.mlx_manager.mlx);

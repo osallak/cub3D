@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/09 11:37:28 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/10 03:25:24 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@
 # define DOOR 4
 # define HEIGHT 720
 # define R_SPEED (TILE_SIZE * 2)
-# define W_SPEED (TILE_SIZE * 2)
+# define W_SPEED (TILE_SIZE * 2.5)
 # define MINIMAP_WIDTH 10
 # define MINIMAP_HEIGHT 5
 # define MINIMAP_X 10
