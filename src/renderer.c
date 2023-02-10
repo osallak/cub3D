@@ -235,12 +235,15 @@ void	move_player_dda(t_cub_manager* manager, double nx, double ny)
 	increment = true;
 	increment_xy = get_x_y_increment(manager, nx, ny, &st);
 	i = -1;
-  	while (++i < st)
+  	while (++i <= st)
 	{
 		if (nx / TILE_SIZE >= 0 && nx / TILE_SIZE < manager->map->map_width\
 		&& ny / TILE_SIZE >= 0 && ny / TILE_SIZE < manager->map->map_height\
 		&& manager->map->map[(int)ny / TILE_SIZE][(int)nx / TILE_SIZE] == '1')
+		{
 			increment = false;
+			break;
+		}
 		nx += increment_xy.x;
 		ny += increment_xy.y;
 	}
