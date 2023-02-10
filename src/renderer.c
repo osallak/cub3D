@@ -11,30 +11,26 @@
 /* ************************************************************************** */
 
 #include "cub3D.h"
-void	rendering_3d_walls(t_cub_manager* manager);
 
-void	cast_all_rays(t_cub_manager* manager);
-
-double radians(double angle)
+double	radians(double angle)
 {
 	return (angle * (M_PI / (double)180));
 }
 
-inline double dist(int x1, int x2, int y1, int y2)
+inline double	dist(int x1, int x2, int y1, int y2)
 {
-    return sqrt(pow(x2 - x1, 2)
-                + pow(y2 - y1, 2) * 1.0);
+	return (sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0));
 }
 
 void	cub_mlx_pixel_put(t_img_data *data, t_draw_point_struct p)
 {
 	char	*dst;
 
-	if (p.point.x < 0 || p.point.x >= p.limits.x\
+	if (p.point.x < 0 || p.point.x >= p.limits.x \
 	|| p.point.y < 0 || p.point.y >= p.limits.y)
 		return ;
-	dst = data->addr + ((int)p.point.y * data->line_length\
-			+ (int)p.point.x * (data->bits_per_pixel / 8));
+	dst = data->addr + ((int)p.point.y * data->line_length \
+		+ (int)p.point.x * (data->bits_per_pixel / 8));
 	*(unsigned int*)dst = p.color;
 }
 
@@ -279,54 +275,87 @@ void	move_player(t_cub_manager *manager)
 	rotate_player(manager);
 }
 
-int draw(t_cub_manager *manager)
+void time_utils(t_cub_manager *manager)
 {
-	t_draw_point_struct p;
-
 	if (manager->time.lastTick == 0)
 		manager->time.lastTick = get_time();
 	manager->time.delta_time = (get_time() - manager->time.lastTick) / 1000.0;
 	manager->time.lastTick = get_time();
-	move_player(manager);
-	cast_all_rays(manager);
-	double mapsx = manager->player.x - 5.0 * TILE_SIZE;
-	mapsx = mapsx / TILE_SIZE * mini_x;
-	// double mapex = manager->player.x + 5.0 * TILE_SIZE;
-	double mapsy = manager->player.y - 3.0 * TILE_SIZE;
-	mapsy = mapsy / TILE_SIZE * mini_y;
-	for (int i = 0;i < mini_y * 6;++i)
-	{
+}
+
+void	render_cell(t_cub_manager* manager, double mapsx, double mapsy, int i)
+{
+	t_draw_point_struct p;
+
 		p.point.y = i;
 		for (int j = 0;j < mini_x * 10;++j)
 		{
 			p.point.x = j;
 			int x = (mapsy + i) / mini_y;
 			int y = (mapsx + j) / mini_x;
-			if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && manager->map->map[x][y] == '1')
-				p.color = 0x00ffffff;
-			else if (x >= 0 && x < manager->map->map_height && y >= 0 && y < manager->map->map_width && (manager->map->map[x][y] == 'D' || manager->map->map[x][y] == 'O'))
-				p.color = 0x00ff0000;
+			if (x >= 0 && x < manager->map->map_height\
+				&& y >= 0 && y < manager->map->map_width\
+				&& manager->map->map[x][y] == '1')
+					p.color = 0x00ffffff;
+			else if (x >= 0 && x < manager->map->map_height\
+				&& y >= 0 && y < manager->map->map_width &&\
+				(manager->map->map[x][y] == 'D' ||\
+				manager->map->map[x][y] == 'O'))
+					p.color = 0x00ff0000;
 			else
 				p.color = 0x00000000;
 			cub_mlx_pixel_put(&manager->mlx_manager.img_data,p);
 		}
-	}
-	double angle = manager->player.rotation_angle - (radians((double) FOV / 2.0) );
-	t_draw_lines_struct line;
+}
+
+void draw_minimap(t_cub_manager* manager)
+{
+	double	mapsx;
+	double	mapsy;
+	int		i;
+
+	mapsx = manager->player.x - 5.0 * TILE_SIZE;
+	mapsx = mapsx / TILE_SIZE * mini_x;
+	mapsy = manager->player.y - 3.0 * TILE_SIZE;
+	mapsy = mapsy / TILE_SIZE * mini_y;
+	i = -1;
+	while (++i < mini_y * 6)
+		render_cell(manager, mapsx, mapsy, i);
+}
+
+void draw_player(t_cub_manager* manager)
+{
+	t_draw_lines_struct	line;
+	double				incr;
+	int					i;
+	double			angle;
+
+	incr = radians(FOV) / 3.0;
+	angle = manager->player.rotation_angle -\
+					(radians((double) FOV / 2.0) );
 	line.color = 0x0000ff00;
 	line.start.x = round(mini_x * 10 / 2.0);
 	line.start.y = round(mini_y * 6 / 2.0);
-	double incr = radians(FOV) / 3;
-	for (int i = 0;i < 3;++i)
+	i  = -1;
+	while (++i < 3)
 	{
 		line.end.x = line.start.x + cos(angle) * mini_x;
 		line.end.y = line.start.y + sin(angle) * mini_x;
-		if (dist(line.start.x, line.start.y, line.end.x, line.end.y) <= 2.0)
-			printf("%lf\n", dist(line.start.x, line.start.y, line.end.x, line.end.y) - 0.0);
 		draw_line(manager, line);
 		angle += incr;
 	}
-	mlx_put_image_to_window(manager->mlx_manager.mlx, manager->mlx_manager.mlx_window, manager->mlx_manager.img_data.img, 0, 0);
+}
+
+int draw(t_cub_manager *manager)
+{
+	time_utils(manager);
+	move_player(manager);
+	cast_all_rays(manager);
+	draw_minimap(manager);
+	draw_player(manager);
+	mlx_put_image_to_window(manager->mlx_manager.mlx,\
+		manager->mlx_manager.mlx_window,\
+		manager->mlx_manager.img_data.img, 0, 0);
 	clear_window(manager, 0x00000000, WIDTH, HEIGHT);
 	return 0;
 }
@@ -336,7 +365,7 @@ double 	__distance(double x, double y, double x1, double y1)
 	return (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)));
 }
 
-bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
+bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* mn)
 {
 	int	x_index;
 	int	y_index;
@@ -345,24 +374,30 @@ bool	__inside_wall(int x, int y, bool isfacingup, t_cub_manager* manager)
 		y -= 1;
 	x_index = x / TILE_SIZE;
 	y_index = y / TILE_SIZE;
-	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
+	if (!(x_index >= 0 && x_index < mn->map->map_width\
+		&& y_index >= 0 && y_index < mn->map->map_height))
 		return (false);
-	double d = __distance(manager->player.x, manager->player.y, x, y);
-	return (manager->map->map[y_index][x_index] == '1' || (manager->map->map[y_index][x_index] == 'D' && (d > TILE_SIZE)));
+	double d = __distance(mn->player.x, mn->player.y, x, y);
+	return (mn->map->map[y_index][x_index] == '1'\
+		|| (mn->map->map[y_index][x_index] == 'D'\
+		&& (d > TILE_SIZE)));
 }
-bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* manager)
+bool	__inside_wall_ver(int x, int y, bool isfacingleft, t_cub_manager* mn)
 {
-	int	x_index;
-	int	y_index;
+	int		x_index;
+	int		y_index;
+	double	d;
 
 	if (isfacingleft == true)
 		x -= 1;
 	x_index = x / TILE_SIZE;
 	y_index = y / TILE_SIZE;
-	if (!(x_index >= 0 && x_index < manager->map->map_width && y_index >= 0 && y_index < manager->map->map_height))
-		return (false);
-	double d = __distance(manager->player.x, manager->player.y, x, y);
-	return (manager->map->map[y_index][x_index] == '1' || (manager->map->map[y_index][x_index] == 'D' && (d > TILE_SIZE)));
+	if (!(x_index >= 0 && x_index < mn->map->map_width\
+		&& y_index >= 0 && y_index < mn->map->map_height))
+			return (false);
+	d = __distance(mn->player.x, mn->player.y, x, y);
+	return (mn->map->map[y_index][x_index] == '1'\
+	|| (mn->map->map[y_index][x_index] == 'D' && (d > TILE_SIZE)));
 }
 
 void intitialize_caster_var(t_cast_function *var)
@@ -388,16 +423,16 @@ void intitialize_caster_var(t_cast_function *var)
 void	initialize_horizontal_check(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
 {
 	var->yintercept = floor(manager->player.y / TILE_SIZE) * (double)TILE_SIZE;
-	if (ray->isRayFacingDown)
+	if (ray->is_fac_down)
 		var->yintercept += TILE_SIZE;
-	var->xintercept = manager->player.x + (var->yintercept - manager->player.y) / tan(ray->rayAngle);//?radians or degrees
+	var->xintercept = manager->player.x + (var->yintercept - manager->player.y) / tan(ray->ray_angle);//?radians or degrees
 	var->ystep = TILE_SIZE;
-	if (ray->isRayFacingUp)
+	if (ray->is_fac_up)
 		var->ystep *= -1;
-	var->xstep = TILE_SIZE / tan(ray->rayAngle);
-	if (ray->isRayFacingLeft && var->xstep > 0)
+	var->xstep = TILE_SIZE / tan(ray->ray_angle);
+	if (ray->is_fac_left && var->xstep > 0)
 		var->xstep *= -1;
-	if (ray->isRayFacingRight && var->xstep < 0)
+	if (ray->is_fac_right && var->xstep < 0)
 		var->xstep *= -1;
 	var->next_horz_touch_x = var->xintercept;
 	var->next_horz_touch_y = var->yintercept;
@@ -405,9 +440,11 @@ void	initialize_horizontal_check(t_ray *ray, t_cub_manager *manager, t_cast_func
 
 void	check_horizontal_intersection(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
 {
-	while (var->next_horz_touch_x >= 0 && var->next_horz_touch_x < manager->map->map_width * TILE_SIZE && var->next_horz_touch_y >= 0 && var->next_horz_touch_y < manager->map->map_height * TILE_SIZE)
+	while (var->next_horz_touch_x >= 0 && var->next_horz_touch_x < manager->map->map_width\
+		* TILE_SIZE && var->next_horz_touch_y >= 0 && var->next_horz_touch_y\
+		< manager->map->map_height * TILE_SIZE)
 	{
-		if (__inside_wall(var->next_horz_touch_x, var->next_horz_touch_y, ray->isRayFacingUp, manager))
+		if (__inside_wall(var->next_horz_touch_x, var->next_horz_touch_y, ray->is_fac_up, manager))
 		{
 			var->found_horz_wall_hit = true;
 			var->horz_wall_hit_x = var->next_horz_touch_x;
@@ -422,17 +459,17 @@ void	check_horizontal_intersection(t_ray *ray, t_cub_manager *manager, t_cast_fu
 void	initialize_vertical_check(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
 {
 	var->xintercept = floor(manager->player.x / TILE_SIZE) * TILE_SIZE;
-	if (ray->isRayFacingRight)
+	if (ray->is_fac_right)
 		var->xintercept += TILE_SIZE;
-	var->yintercept = manager->player.y + (var->xintercept - manager->player.x) * tan(ray->rayAngle);
+	var->yintercept = manager->player.y + (var->xintercept - manager->player.x) * tan(ray->ray_angle);
 	
 	var->xstep = TILE_SIZE;
-	if (ray->isRayFacingLeft)
+	if (ray->is_fac_left)
 		var->xstep = -var->xstep;
-	var->ystep = TILE_SIZE * tan(ray->rayAngle);
-	if (ray->isRayFacingUp && var->ystep > 0)
+	var->ystep = TILE_SIZE * tan(ray->ray_angle);
+	if (ray->is_fac_up && var->ystep > 0)
 		var->ystep *= -1;
-	if (ray->isRayFacingDown && var->ystep < 0)
+	if (ray->is_fac_down && var->ystep < 0)
 		var->ystep *= -1;
 	
 	var->next_ver_touch_x = var->xintercept;
@@ -441,9 +478,12 @@ void	initialize_vertical_check(t_ray *ray, t_cub_manager *manager, t_cast_functi
 
 void	check_vertical_intersection(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
 {
-	while (var->next_ver_touch_x >= 0 && var->next_ver_touch_x <manager->map->map_width * TILE_SIZE && var->next_ver_touch_y >= 0 && var->next_ver_touch_y < manager->map->map_height * TILE_SIZE)
+	while (var->next_ver_touch_x >= 0 && var->next_ver_touch_x <manager->map->map_width\
+	* TILE_SIZE && var->next_ver_touch_y >= 0\
+	&& var->next_ver_touch_y < manager->map->map_height * TILE_SIZE)
 	{
-		if (__inside_wall_ver(var->next_ver_touch_x, var->next_ver_touch_y, ray->isRayFacingLeft, manager))
+		if (__inside_wall_ver(var->next_ver_touch_x, var->next_ver_touch_y,\
+			ray->is_fac_left, manager))
 		{
 			var->found_ver_hit = true;
 			var->ver_hit_x = var->next_ver_touch_x;
@@ -455,11 +495,13 @@ void	check_vertical_intersection(t_ray *ray, t_cub_manager *manager, t_cast_func
 	}
 }
 
-void calculate_ray_length(t_ray *ray, t_cub_manager *manager, t_cast_function *var)
+void calculate_ray_length(t_ray *ray, t_cub_manager *mn, t_cast_function *var)
 {
-	var->horz_hit_distance = __distance(manager->player.x , manager->player.y ,var->horz_wall_hit_x, var->horz_wall_hit_y);
-	var->vert_hit_distance = __distance(manager->player.x , manager->player.y ,var->ver_hit_x, var->ver_hit_y);
-	ray->wasHitVertical = false;
+	var->horz_hit_distance = __distance(mn->player.x ,\
+	mn->player.y ,var->horz_wall_hit_x, var->horz_wall_hit_y);
+	var->vert_hit_distance = __distance(mn->player.x ,\
+	mn->player.y ,var->ver_hit_x, var->ver_hit_y);
+	ray->was_vert_h = false;
 }
 
 void	choose_closest_intersection(t_ray *ray, t_cast_function *var)
@@ -475,7 +517,7 @@ void	choose_closest_intersection(t_ray *ray, t_cast_function *var)
 		ray->wallHitX = var->ver_hit_x;
 		ray->wallHitY = var->ver_hit_y;
 		ray->distance = var->vert_hit_distance;	
-		ray->wasHitVertical = true;
+		ray->was_vert_h = true;
 	}
 }
 
@@ -490,7 +532,7 @@ void	choose_ver_intersection(t_ray *ray, t_cast_function *var)
 	ray->wallHitX = var->ver_hit_x;
 	ray->wallHitY = var->ver_hit_y;
 	ray->distance = var->vert_hit_distance;
-	ray->wasHitVertical = true;		
+	ray->was_vert_h = true;		
 }
 
 void	cast(t_ray* ray, t_cub_manager* manager)
@@ -498,7 +540,7 @@ void	cast(t_ray* ray, t_cub_manager* manager)
 	t_cast_function	var;
 
 	intitialize_caster_var(&var);
-	normalize_angle(&ray->rayAngle);
+	normalize_angle(&ray->ray_angle);
 	initialize_horizontal_check(ray, manager, &var);
 	check_horizontal_intersection(ray, manager, &var);
 	initialize_vertical_check(ray, manager, &var);
@@ -517,17 +559,17 @@ void	__initialize_ray_attributes(t_ray *ray)
 	ray->distance = 0;
 	ray->wallHitX = 0;
 	ray->wallHitY = 0;
-	ray->wasHitVertical = false;
-	if (ray->rayAngle > 0 && ray->rayAngle < M_PI)
-		ray->isRayFacingDown = true;
+	ray->was_vert_h = false;
+	if (ray->ray_angle > 0 && ray->ray_angle < M_PI)
+		ray->is_fac_down = true;
 	else
-		ray->isRayFacingDown = false;
-	ray->isRayFacingUp = !ray->isRayFacingDown;
-	if (ray->rayAngle < M_PI_2 || ray->rayAngle > 1.5 * M_PI)
-		ray->isRayFacingRight = true;
+		ray->is_fac_down = false;
+	ray->is_fac_up = !ray->is_fac_down;
+	if (ray->ray_angle < M_PI_2 || ray->ray_angle > 1.5 * M_PI)
+		ray->is_fac_right = true;
 	else
-		ray->isRayFacingRight = false;
-	ray->isRayFacingLeft = !ray->isRayFacingRight;
+		ray->is_fac_right = false;
+	ray->is_fac_left = !ray->is_fac_right;
 }
 
 double distance(double x, double y, double a, double b)
@@ -554,7 +596,7 @@ void	cast_all_rays(t_cub_manager* manager)
 	while (++i < NUMBER_OF_RAYS)
 	{
 		normalize_angle(&ray_angle);
-		manager->rays[i].rayAngle =  ray_angle;
+		manager->rays[i].ray_angle =  ray_angle;
 		__initialize_ray_attributes(&manager->rays[i]);
 		cast(&manager->rays[i], manager);
 		ray_angle += angle_increment;
@@ -607,13 +649,13 @@ void	put_color_into_wall(t_cub_manager* manager, int x, int y, int color)
 	cub_mlx_pixel_put(&manager->mlx_manager.img_data, p);
 }
 
-void	__render_gun(t_cub_manager* manager)
+void	__render_gun(t_cub_manager* mn)
 {
 	int			x_start;
 	int			y_start;
 	t_texture	choosen_gun;
 
-	choosen_gun = manager->weapons.gun[manager->weapons.gun_type + manager->weapons.gun_state];
+	choosen_gun = mn->weapons.gun[mn->weapons.gun_type + mn->weapons.gun_state];
 	x_start = WIDTH / 2 - choosen_gun.wi / 2;
 	y_start = HEIGHT - choosen_gun.hi;
 	for (int y = y_start; y < y_start + choosen_gun.hi; y++)
@@ -622,13 +664,13 @@ void	__render_gun(t_cub_manager* manager)
 		{
 			u_int32_t color = *(((int *)choosen_gun.tex_img_data.addr+\
 			((y - y_start) * choosen_gun.wi + (x - x_start))));
-			put_color_into_wall(manager, x, y, color);	
+			put_color_into_wall(mn, x, y, color);	
 		}
 	}
-	if (manager->weapons.gun_frames == 0)
-		manager->weapons.gun_state = STAND;
+	if (mn->weapons.gun_frames == 0)
+		mn->weapons.gun_state = STAND;
 	else
-		manager->weapons.gun_frames--;
+		mn->weapons.gun_frames--;
 }
 
 void	rendering_3d_walls(t_cub_manager* manager)
@@ -641,7 +683,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 	double off_y = -1;
 	for (int i = 0; i < NUMBER_OF_RAYS; i++) {
 		int tex = -1;
-        double perpDistance = manager->rays[i].distance * cos(manager->rays[i].rayAngle - manager->player.rotation_angle);
+        double perpDistance = manager->rays[i].distance * cos(manager->rays[i].ray_angle - manager->player.rotation_angle);
         double distanceProjPlane = (WIDTH / 2.0) / tan(radians(FOV) / 2.0);
         double projectedWallHeight = ((double)TILE_SIZE / perpDistance) * distanceProjPlane;
 
@@ -652,12 +694,12 @@ void	rendering_3d_walls(t_cub_manager* manager)
         double wallBottomPixel = (HEIGHT / 2.0) + (wallStripHeight / 2.0);
 		int x = 0;
 		int y = 0;
-		if (manager->rays[i].wasHitVertical)
+		if (manager->rays[i].was_vert_h)
 		{
 			off_x = fmod(manager->rays[i].wallHitY, TILE_SIZE);
 			// checking for vertical doors;
 			y = manager->rays[i].wallHitY / TILE_SIZE;
-			if (manager->rays[i].isRayFacingRight)
+			if (manager->rays[i].is_fac_right)
 			{
 				x = (manager->rays[i].wallHitX + 1.) / TILE_SIZE;
 				if (manager->map->map[y][x] != 'D')
@@ -677,7 +719,7 @@ void	rendering_3d_walls(t_cub_manager* manager)
 		else
 		{
 			x = manager->rays[i].wallHitX / TILE_SIZE;
-			if (manager->rays[i].isRayFacingDown)
+			if (manager->rays[i].is_fac_down)
 			{
 				y = (manager->rays[i].wallHitY + 1.) / TILE_SIZE;
 				if (manager->map->map[y][x] != 'D')
@@ -741,9 +783,9 @@ void	protect_textures(t_cub_manager* manager, bool flag)
 	while (++i < DOOR)
 	{
 		if (flag && manager->map->wall_textures[i].img == NULL)
-			panic("Error: while decoding textures\n");
+			panic("Error: while decoding textures");
 		if (!flag && manager->map->wall_textures[i].tex_img_data.addr == NULL)
-			panic("Error\ncannot get texture data\n");
+			panic("Error\ncannot get texture data");
 	}
 }
 
