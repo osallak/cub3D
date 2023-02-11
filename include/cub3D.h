@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/11 17:01:11 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/11 19:05:38 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -291,7 +291,17 @@ void	cubmlx_pixel_put(t_img_data *data, int x, int y, int color);
 size_t	ft_strlcpy(char *dst, char *src, size_t dstsize);
 int		draw(t_cub_manager *manager);
 void	*xalloc(size_t size);
-void	rendering_3d_walls(t_cub_manager* manager);
+void	rendering_3d_walls(t_cub_manager *manager);
 void	cast_all_rays(t_cub_manager *manager);
+double	radians(double angle);
+double	dist(int x1, int x2, int y1, int y2);
+double	__distance(double x, double y, double x1, double y1);
+void	protect_textures(t_cub_manager *manager, bool flag);
+void	getting_textures_data(t_cub_manager *manager);
+void	decoding_xpm_files(t_cub_manager *manager);
+void	protect_gun_textures(t_cub_manager *manager, int flag);
+void	__get_gun_data(t_cub_manager *manager);
+void	__load_gun_textures(t_cub_manager *manager);
+void	load_door_textures(t_cub_manager *manager);
 
 #endif
