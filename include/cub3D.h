@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/10 06:49:32 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/11 17:01:11 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,21 @@ typedef struct s_door
 	struct s_door	*prev;
 	struct s_door	*next;
 }	t_door;
+
+typedef struct s_render_attr
+{
+	t_draw_point_struct	p;
+	double				off_x;
+	double				off_y;
+	int					x;
+	int					y;
+	double				perb_distance;
+	double				projec_plane_dis;
+	double				proj_wall_h;
+	double				wall_strip_h;
+	double				wall_top_pix;
+	double				wall_bottom_pix;
+}	t_rend_attr;
 
 typedef struct s_draw_lines_struct
 {

@@ -14,3 +14,4 @@ X add parsing rule for doors
         "/Users/osallak/Desktop/normed-version-cub3d/assets/door1.xpm"
 
 - fix mouse move (keeps rotating)
+- see why the player isn't rendered in minimap
