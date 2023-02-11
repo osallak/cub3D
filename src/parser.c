@@ -6,12 +6,12 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/09 11:38:00 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/11 22:04:25 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3D.h"
-int	create_trgb(int t, int r, int g, int b);
+
 void	panic(const char *str)
 {
 	printf("%s\n", str);
@@ -32,10 +32,8 @@ void	_norm_get_map_size(char **map_line, const int map_fd)
 
 unsigned int	get_map_size(const int map_fd, char **map_line)
 {
-	// char	*map_line;
 	long	index;
 
-	// map_line = get_next_line(map_fd);
 	index = 0;
 	if (*map_line)
 		++index;
@@ -130,7 +128,6 @@ long	get_end(char **map, int index)
 	long	end;
 
 	end = ft_strlen(map[index]) - 1;
-	// printf("--->%d\n", end);
 	while (map[index] && end > 0 && map[index][end] == ' ')
 		--end;
 	return (end);
@@ -143,7 +140,7 @@ long	get_begin(char **map, int index)
 
 	i = 0;
 	size = ft_strlen(map[index]);
-	while (map[index][i]  == ' ' && i < size)
+	while (map[index][i] == ' ' && i < size)
 		++i;
 	return (i);
 }
@@ -175,20 +172,8 @@ void	check_horizonal_borders(char **map, int index)
 	}
 }
 
-// void	check_line(char **map, char *line, int index)
-// {
-// 	unsigned int	line_size;
-// 	unsigned int	begin;
-// 	unsigned int	end;
-
-// 	begin = get_begin(map, index);
-// 	end = get_end(map, index);
-	
-// }
-
-long _norm_check_valid_space(long *i, char **map, long j, long *line_size)
+long	_norm_check_valid_space(long *i, char **map, long j, long *line_size)
 {
-
 	*i = get_begin(map, j);
 	*line_size = ft_strlen(map[j]);
 	return (get_end(map, j));
@@ -286,6 +271,21 @@ void	check_vertical_path(char **map, long begin, long map_lines, long j)
 		panic("Error: invalid map");
 }
 
+void	check_for_walls(t_quadri_long *tmp, \
+long *begin, char **map, unsigned int map_lines)
+{
+	if (*begin - 1 >= get_begin(map, (*tmp).a) && *begin + 1 <= \
+	get_end(map, (*tmp).a) && (*tmp).a - 1 >= 0 && (*tmp).a + 1 < map_lines)
+	{
+		if (!((map[(*tmp).a][*begin - 1] == '1'\
+		&& map[(*tmp).a][*begin + 1] == '1') \
+		|| (map[(*tmp).a - 1][*begin] == '1'\
+		&& map[(*tmp).a + 1][*begin] == '1')))
+			panic("Error: invalid map: door is not \
+surrounded by walls");
+	}
+}
+
 void	check_validity_of_map(char **map, unsigned int map_lines)
 {
 	long			begin;
@@ -307,22 +307,25 @@ void	check_validity_of_map(char **map, unsigned int map_lines)
 				check_vertical_path(map, begin, map_lines, tmp.a);
 			}
 			if (map[tmp.a][begin] == DOOR_CHAR)
-			{
-				if (begin - 1 >= get_begin(map, tmp.a) && begin + 1 <= get_end(map, tmp.a) && tmp.a - 1 >= 0 && tmp.a + 1 < map_lines)
-				{
-					if (!((map[tmp.a][begin - 1] == '1' && map[tmp.a][begin + 1] == '1') || (map[tmp.a - 1][begin] == '1' && map[tmp.a + 1][begin] == '1')))
-					    panic("Error: invalid map: door is not surrounded by walls");
-                }
-			}
+				check_for_walls(&tmp, &begin, map, map_lines);
 			++begin;
 		}
 	}
 }
 
-void	_norm_check_map_character(t_quadri_long* tmp, char **map)
+void	_norm_check_map_character(t_quadri_long *tmp, char **map)
 {
 	tmp->d = 1;
 	tmp->c = map[tmp->a][tmp->b];
+}
+
+void	check_for_duplicate_pcharacter(t_quadri_long *tmp, char **map)
+{
+	if ((*tmp).d
+		&& ft_strchr(PLAYER_CHAR, map[(*tmp).a][(*tmp).b]))
+		panic("Error: invalid map: duplicate player character");
+	if (ft_strchr(PLAYER_CHAR, map[(*tmp).a][(*tmp).b]))
+		_norm_check_map_character(tmp, map);
 }
 
 char	check_map_characters(char **map)
@@ -338,17 +341,9 @@ char	check_map_characters(char **map)
 		while (++tmp.b < ft_strlen(map[tmp.a]))
 		{
 			if (!ft_strchr(VALID_CHARS, map[tmp.a][tmp.b]))
-			{
 				panic("Error: invalid map: impostor character");
-			}
 			else
-			{
-				if (tmp.d
-					&& ft_strchr(PLAYER_CHAR, map[tmp.a][tmp.b]))
-					panic("Error: invalid map");
-				if (ft_strchr(PLAYER_CHAR, map[tmp.a][tmp.b]))
-					_norm_check_map_character(&tmp, map);
-			}
+				check_for_duplicate_pcharacter(&tmp, map);
 		}
 	}
 	if (tmp.c == 0)
@@ -401,7 +396,7 @@ void	skip_lines(long *skip, char **map_line, const int map_fd)
 	*map_line = filter_line(*map_line);
 }
 
-void	check_no_asset(char **map_line, t_map_manager* map_manager)
+void	check_no_asset(char **map_line, t_map_manager *map_manager)
 {
 	char	**splitted;
 	int		fd;
@@ -420,7 +415,7 @@ void	check_no_asset(char **map_line, t_map_manager* map_manager)
 	}
 }
 
-void	check_so_asset(char **map_line, t_map_manager* map_manager)
+void	check_so_asset(char **map_line, t_map_manager *map_manager)
 {
 	char	**splitted;
 	int		fd;
@@ -438,7 +433,7 @@ void	check_so_asset(char **map_line, t_map_manager* map_manager)
 	}
 }
 
-void	check_we_asset(char **map_line, t_map_manager* map_manager)
+void	check_we_asset(char **map_line, t_map_manager *map_manager)
 {
 	char	**splitted;
 	int		fd;
@@ -474,33 +469,68 @@ void	check_ea_asset(char **map_line, t_map_manager *map_manager)
 	}
 }
 
+void	get_color(char **map_line, t_map_manager *map_manager, char color)
+{
+	int	i;
+	int	j;
+	int	len;
+	char	*color_str;
+	int	res = 0;
+
+	i = 0;
+	len = ft_strlen(*map_line);
+	while (i < len)
+	{
+		if ((*map_line)[i] == ' ')
+		    break;
+		++i;
+	}
+	// printf("<%d>\n", i);
+	if (i == 1 && (*map_line)[i] == ' '\
+	&& (*map_line)[i - 1] == color)
+	{
+		while (i < len && (*map_line)[i] == ' ')
+			++i;
+		j = i;
+		while (j < len && (*map_line)[j] != ',')
+		{
+			++j;
+		}
+		// printf("%c\n", (*map_line)[j]);
+		printf("<%s>\n", ft_substr(*map_line, i, j));
+		printf("<%d>\n", ft_atoi(ft_substr(*map_line, i, j)));
+		// TODO finish this tomorrow
+	}
+}
+
 void	check_c_asset(char **map_line, t_map_manager *map_manager)
 {
-	char	**splitted;
-	char	**colors;
+	// char	**splitted;
+	// char	**colors;
 
-	splitted = ft_split(*map_line, ' ');
-	if (splitted && !my_strcmp(splitted[0], "C") && splitted[1])
-	{
-		if (map_manager->c != -1)
-			panic("Error: invalid map: duplicate ceil color");
-		colors = ft_split(splitted[1], ',');
-		if (splitted[1][0] == ',')
-			panic("error: `, at the begin of C asset");
-		for (unsigned int i = 0;i < ft_strlen(splitted[1]);++i)
-		{
-			if (splitted[1][i] == ',' && splitted[1][i+1] == ',')
-				panic("error: duplicate `,");
-			if (splitted[1][i] == ',' && !splitted[1][i + 1])
-			{
-				panic("error: `, at end of string");
-			}
-		}
-		if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
-			panic("Error: missing colors");
-		map_manager->c = create_trgb(0, ft_atoi(colors[0]),
-				ft_atoi(colors[1]), ft_atoi(colors[2]));
-	}
+	// splitted = ft_split(*map_line, ' ');
+	// if (splitted && !my_strcmp(splitted[0], "C") && splitted[1])
+	// {
+	// 	if (map_manager->c != -1)
+	// 		panic("Error: invalid map: duplicate ceil color");
+	// 	colors = ft_split(splitted[1], ',');
+	// 	if (splitted[1][0] == ',')
+	// 		panic("error: `, at the begin of C asset");
+	// 	for (unsigned int i = 0;i < ft_strlen(splitted[1]);++i)
+	// 	{
+	// 		if (splitted[1][i] == ',' && splitted[1][i+1] == ',')
+	// 			panic("error: duplicate `,");
+	// 		if (splitted[1][i] == ',' && !splitted[1][i + 1])
+	// 		{
+	// 			panic("error: `, at end of string");
+	// 		}
+	// 	}
+	// 	if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
+	// 		panic("Error: missing colors");
+	// 	map_manager->c = create_trgb(0, ft_atoi(colors[0]),
+	// 			ft_atoi(colors[1]), ft_atoi(colors[2]));
+	// }
+		get_color(map_line, map_manager, 'C');
 }
 
 void	check_f_asset(char **map_line, t_map_manager *map_manager)
@@ -532,7 +562,8 @@ void	check_f_asset(char **map_line, t_map_manager *map_manager)
 	}
 }
 
-void	parse_assets(t_map_manager	*map_manager, const int map_fd, char **map_line, long *skip)
+void	parse_assets(t_map_manager	*map_manager,\
+const int map_fd, char **map_line, long *skip)
 {
 	skip_lines(skip, map_line, map_fd);
 	if (!*map_line)
@@ -540,7 +571,7 @@ void	parse_assets(t_map_manager	*map_manager, const int map_fd, char **map_line,
 	while (ft_strchr(VALID_ID, *map_line[0]))
 	{
 		++(*skip);
-		check_no_asset(map_line, map_manager); // free 
+		check_no_asset(map_line, map_manager);
 		check_so_asset(map_line, map_manager);
 		check_we_asset(map_line, map_manager);
 		check_ea_asset(map_line, map_manager);
@@ -568,22 +599,31 @@ void	init_map_manager(t_map_manager *map_manager)
 	map_manager->ea = 0x0;
 }
 
+void check_for_assets(t_map_manager *map_manager)
+{
+	if (map_manager->f == -1
+	|| map_manager->c == -1\
+	|| !map_manager->no\
+	|| !map_manager->so\
+	|| !map_manager->we\
+	|| !map_manager->ea)
+		panic("Error: can't retrieve assets");
+}
+
 void	parse_map_file(int map_fd, char *file)
 {
 	char			**map;
 	unsigned int	map_lines;
 	char			*map_line;
-	t_map_manager	*map_manager = xalloc(sizeof(t_map_manager));
-	long			skip = 0;
+	t_map_manager	*map_manager;
+	long			skip;
 
+	skip = 0;
+	map_manager = xalloc(sizeof(t_map_manager));
 	init_map_manager(map_manager);
 	parse_assets(map_manager, map_fd, & map_line, &skip);
-	if (map_manager->f == -1 || map_manager->c == -1 || !map_manager->no || !map_manager->so
-	|| !map_manager->we || !map_manager->ea)
-		panic("Error: can't retrieve assets");
-	// printf("%ld\n", skip);
+	check_for_assets(map_manager);
 	map_lines = get_map_size(map_fd, &map_line);
-	// printf("%d\n", map_lines);
 	if (map_lines < 3)
 		panic("Error: invalid map");
 	map = malloc(sizeof(char *) * (map_lines + 1));
@@ -595,13 +635,10 @@ void	parse_map_file(int map_fd, char *file)
 		map_line = get_next_line(map_fd);
 		free(map_line);
 	}
-	
 	if (map_fd == -1)
 		exit(EXIT_FAILURE);
 	fill_map(map, map_fd, map_lines);
 	map_manager->c_player = check_map_characters(map);
-	// for (unsigned int i = 0;i < map_lines;i += 1)
-	// 	printf("%s\n", map[i]);
 	check_validity_of_map(map, map_lines);
 	map_manager->map = map;
 	render(map_manager);

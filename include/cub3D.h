@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/10 11:25:39 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/11 18:49:58 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,8 @@ typedef struct cast_helper
 	bool		found_horz_wall_hit;
 	bool		found_vert_wall_hit;
 }	t_cast_helper;
-typedef struct	s_img_data {
+
+typedef struct s_img_data {
 	void	*img;
 	char	*addr;
 	int		bits_per_pixel;
@@ -160,12 +161,27 @@ typedef struct s_draw_point_struct
 
 typedef struct s_door
 {
-	int x;
-	int y;	
-	double dist;
-	struct s_door *prev;
-	struct s_door *next;
+	int				x;
+	int				y;
+	double			dist;
+	struct s_door	*prev;
+	struct s_door	*next;
 }	t_door;
+
+typedef struct s_render_attr
+{
+	t_draw_point_struct	p;
+	double				off_x;
+	double				off_y;
+	int					x;
+	int					y;
+	double				perb_distance;
+	double				projec_plane_dis;
+	double				proj_wall_h;
+	double				wall_strip_h;
+	double				wall_top_pix;
+	double				wall_bottom_pix;
+}	t_rend_attr;
 
 typedef struct s_draw_lines_struct
 {
@@ -177,8 +193,8 @@ typedef struct s_draw_lines_struct
 
 typedef struct s_draw_circle
 {
-	t_pair_double   center;
-    double        	radius;
+	t_pair_double	center;
+	double			radius;
 	t_pair_double	limits;
 	int				color;
 }	t_draw_circle;
@@ -217,28 +233,28 @@ typedef struct s_player
 {
 	double	rotation_angle;
 	double	rotation_speed;
-	double		walk_speed;
+	double	walk_speed;
 	int		turn_direction;
 	int		walk_direction;
 	double	x;
 	double	y;
-	bool move_x;
-	bool move_y;
-	int rotate;
+	bool	move_x;
+	bool	move_y;
+	int		rotate;
 }	t_player;
 
 typedef struct s_ray
 {
-	double	rayAngle;
-    double	wallHitX;
-    double	wallHitY;
-    double	distance;
-    bool	wasHitVertical;
-    bool	isRayFacingUp;
-    bool	isRayFacingDown;
-    bool	isRayFacingLeft;
-    bool	isRayFacingRight;
-}	t_ray;
+	double	ray_angle;
+	double	wallHitX;
+	double	wallHitY;
+	double	distance;
+	bool	was_vert_h;
+	bool	is_fac_up;
+	bool	is_fac_down;
+	bool	is_fac_left;
+	bool	is_fac_right;
+}			t_ray;
 
 typedef struct s_weapons
 {
@@ -246,7 +262,7 @@ typedef struct s_weapons
 	t_texture	aim_symbol;
 	int			gun_frames;
 	int			gun_state;
-	int			gun_type;//this can be PISTOL or SNSIPER
+	int			gun_type;
 }	t_weapons;
 
 typedef struct s_cub_manager
@@ -262,7 +278,7 @@ typedef struct s_cub_manager
 	t_door			*door;
 	t_weapons		weapons;
 	int				mouse_x;
-	bool			mouse_move;//set this to false 
+	bool			mouse_move;
 	int				__move_slideways;
 }	t_cub_manager;
 
@@ -273,6 +289,9 @@ int		render(t_map_manager *map_manager);
 int		create_trgb(int t, int r, int g, int b);
 void	cubmlx_pixel_put(t_img_data *data, int x, int y, int color);
 size_t	ft_strlcpy(char *dst, char *src, size_t dstsize);
-int		draw(t_cub_manager * manager);
-void	*xalloc(size_t size); // the xalloc function allocates memory and if it fails it exits the program
+int		draw(t_cub_manager *manager);
+void	*xalloc(size_t size);
+void	rendering_3d_walls(t_cub_manager* manager);
+void	cast_all_rays(t_cub_manager *manager);
+
 #endif
