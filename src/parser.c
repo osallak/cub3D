@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 11:32:10 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 11:51:25 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -469,38 +469,46 @@ void	check_ea_asset(char **map_line, t_map_manager *map_manager)
 	}
 }
 
+void	skip_spaces(unsigned int *i, char *map_line)
+{
+	*i = 0;
+	while (*i < ft_strlen(map_line))
+	{
+		if (map_line[*i] == ' ')
+			break ;
+		++(*i);
+	}
+}
+
+void	get_color_value(char *map_line, unsigned int *i, \
+unsigned int *j, char **color_value)
+{
+	while (*i < ft_strlen(map_line) && map_line[*i] == ' ')
+		++(*i);
+	*j = *i;
+	while (*j < ft_strlen(map_line) && map_line[*j] != ',')
+		++(*j);
+	*color_value = ft_substr(map_line, *i, *j);
+}
 
 void	get_color(char **map_line, int *color_value, char color)
 {
-	int		i;
-	int		j;
-	int		k;
-	int		len;
-	char	*color_str;
-	unsigned char		rgb[3];
+	unsigned int	i;
+	unsigned int	j;
+	int				k;
+	char			*color_str;
+	unsigned char	rgb[3];
 
-	i = 0;
-	len = ft_strlen(*map_line);
-	while (i < len)
-	{
-		if ((*map_line)[i] == ' ')
-		    break;
-		++i;
-	}
+	skip_spaces(&i, *map_line);
 	k = 0;
 	if (i == 1 && (*map_line)[i] == ' '\
 	&& (*map_line)[i - 1] == color)
 	{
 		if (*color_value != -1)
 			panic("Error: duplicate color value");
-		while (i < len)
+		while (i < ft_strlen(*map_line))
 		{
-			while (i < len && (*map_line)[i] == ' ')
-				++i;
-			j = i;
-			while (j < len && (*map_line)[j] != ',')
-				++j;
-			color_str = ft_substr(*map_line, i, j);
+			get_color_value(*map_line, &i, &j, &color_str);
 			rgb[k] = ft_atoi(color_str);
 			free(color_str);
 			i = j + 1;
@@ -520,7 +528,7 @@ void	check_f_asset(char **map_line, t_map_manager *map_manager)
 	get_color(map_line, &map_manager->f, 'F');
 }
 
-void	parse_assets(t_map_manager	*map_manager,\
+void	parse_assets(t_map_manager	*map_manager, \
 const int map_fd, char **map_line, long *skip)
 {
 	skip_lines(skip, map_line, map_fd);
@@ -546,7 +554,6 @@ int	create_trgb(int t, int r, int g, int b)
 	return (t << 24 | r << 16 | g << 8 | b);
 }
 
-
 void	init_map_manager(t_map_manager *map_manager)
 {
 	map_manager->c = -1;
@@ -557,15 +564,29 @@ void	init_map_manager(t_map_manager *map_manager)
 	map_manager->ea = 0x0;
 }
 
-void check_for_assets(t_map_manager *map_manager)
+void	check_for_assets(t_map_manager *map_manager)
 {
 	if (map_manager->f == -1
-	|| map_manager->c == -1\
-	|| !map_manager->no\
-	|| !map_manager->so\
-	|| !map_manager->we\
-	|| !map_manager->ea)
+		|| map_manager->c == -1
+		|| !map_manager->no
+		|| !map_manager->so
+		|| !map_manager->we
+		|| !map_manager->ea)
 		panic("Error: can't retrieve assets");
+}
+
+void	skip_parsed_assets(char **map_line, int skip, char *file)
+{
+	int	map_fd;
+
+	map_fd = open(file, O_RDONLY);
+	if (map_fd == -1)
+		exit(EXIT_FAILURE);
+	while (skip--)
+	{
+		*map_line = get_next_line(map_fd);
+		free(*map_line);
+	}
 }
 
 void	parse_map_file(int map_fd, char *file)
@@ -587,14 +608,7 @@ void	parse_map_file(int map_fd, char *file)
 	map = malloc(sizeof(char *) * (map_lines + 1));
 	if (!map)
 		exit(EXIT_FAILURE);
-	map_fd = open(file, O_RDONLY);
-	while (skip--)
-	{
-		map_line = get_next_line(map_fd);
-		free(map_line);
-	}
-	if (map_fd == -1)
-		exit(EXIT_FAILURE);
+	skip_parsed_assets(&map_line, skip, file);
 	fill_map(map, map_fd, map_lines);
 	map_manager->c_player = check_map_characters(map);
 	check_validity_of_map(map, map_lines);
