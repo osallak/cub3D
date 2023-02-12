@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 15:59:25 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/11 22:04:25 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 11:32:10 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -469,13 +469,15 @@ void	check_ea_asset(char **map_line, t_map_manager *map_manager)
 	}
 }
 
-void	get_color(char **map_line, t_map_manager *map_manager, char color)
+
+void	get_color(char **map_line, int *color_value, char color)
 {
-	int	i;
-	int	j;
-	int	len;
+	int		i;
+	int		j;
+	int		k;
+	int		len;
 	char	*color_str;
-	int	res = 0;
+	unsigned char		rgb[3];
 
 	i = 0;
 	len = ft_strlen(*map_line);
@@ -485,81 +487,37 @@ void	get_color(char **map_line, t_map_manager *map_manager, char color)
 		    break;
 		++i;
 	}
-	// printf("<%d>\n", i);
+	k = 0;
 	if (i == 1 && (*map_line)[i] == ' '\
 	&& (*map_line)[i - 1] == color)
 	{
-		while (i < len && (*map_line)[i] == ' ')
-			++i;
-		j = i;
-		while (j < len && (*map_line)[j] != ',')
+		if (*color_value != -1)
+			panic("Error: duplicate color value");
+		while (i < len)
 		{
-			++j;
-		}
-		// printf("%c\n", (*map_line)[j]);
-		printf("<%s>\n", ft_substr(*map_line, i, j));
-		printf("<%d>\n", ft_atoi(ft_substr(*map_line, i, j)));
-		// TODO finish this tomorrow
+			while (i < len && (*map_line)[i] == ' ')
+				++i;
+			j = i;
+			while (j < len && (*map_line)[j] != ',')
+				++j;
+			color_str = ft_substr(*map_line, i, j);
+			rgb[k] = ft_atoi(color_str);
+			free(color_str);
+			i = j + 1;
+			++k;
+		}	
+		*color_value = create_trgb(0, rgb[0], rgb[1], rgb[2]);
 	}
 }
 
 void	check_c_asset(char **map_line, t_map_manager *map_manager)
 {
-	// char	**splitted;
-	// char	**colors;
-
-	// splitted = ft_split(*map_line, ' ');
-	// if (splitted && !my_strcmp(splitted[0], "C") && splitted[1])
-	// {
-	// 	if (map_manager->c != -1)
-	// 		panic("Error: invalid map: duplicate ceil color");
-	// 	colors = ft_split(splitted[1], ',');
-	// 	if (splitted[1][0] == ',')
-	// 		panic("error: `, at the begin of C asset");
-	// 	for (unsigned int i = 0;i < ft_strlen(splitted[1]);++i)
-	// 	{
-	// 		if (splitted[1][i] == ',' && splitted[1][i+1] == ',')
-	// 			panic("error: duplicate `,");
-	// 		if (splitted[1][i] == ',' && !splitted[1][i + 1])
-	// 		{
-	// 			panic("error: `, at end of string");
-	// 		}
-	// 	}
-	// 	if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
-	// 		panic("Error: missing colors");
-	// 	map_manager->c = create_trgb(0, ft_atoi(colors[0]),
-	// 			ft_atoi(colors[1]), ft_atoi(colors[2]));
-	// }
-		get_color(map_line, map_manager, 'C');
+	get_color(map_line, &map_manager->c, 'C');
 }
 
 void	check_f_asset(char **map_line, t_map_manager *map_manager)
 {
-	char	**colors;
-	char	**splitted;
-
-	splitted = ft_split(*map_line, ' ');
-	if (splitted && !my_strcmp(splitted[0], "F") && splitted[1])
-	{
-		if (map_manager->f != -1)
-			panic("Error: invalid map: duplicate floor color");
-		colors = ft_split(splitted[1], ',');
-		if (splitted[1][0] == ',')
-			panic("error: `, at the begin of F asset");
-		for (unsigned int i = 0;i < ft_strlen(splitted[1]);++i)
-		{
-			if (splitted[1][i] == ',' && splitted[1][i+1] == ',')
-				panic("error: duplicate `,");
-			if (splitted[1][i] == ',' && !splitted[1][i + 1])
-			{
-				panic("error: `, at end of string");
-			}
-		}
-		if (!colors || (colors && (!colors[0] || !colors[1] || !colors[2])))
-			panic("Error: missing colors");
-		map_manager->f = create_trgb(0, ft_atoi(colors[0]),
-				ft_atoi(colors[1]), ft_atoi(colors[2]));
-	}
+	get_color(map_line, &map_manager->f, 'F');
 }
 
 void	parse_assets(t_map_manager	*map_manager,\
