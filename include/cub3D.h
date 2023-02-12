@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/11 22:05:52 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 12:58:18 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -330,4 +330,11 @@ void			intitialize_caster_var(t_cast_function *var);
 bool			__inside_wall_ver(int x, int y, bool isfacingleft, \
 t_cub_manager *mn);
 bool			__inside_wall(int x, int y, bool isfacingup, t_cub_manager *mn);
+long			get_map_width(t_map_manager *map_manager);
+long			get_map_height(t_map_manager *map_manager);
+void			normalize_angle(double *ang);
+int				controls_up(int key, t_cub_manager *manager);
+void			check_vertical_intersection(t_ray *ray, t_cub_manager *manager, \
+t_cast_function *var);
+int				my_strcmp(char *a, char *b);
 #endif

@@ -1,7 +1,8 @@
 NAME = bin/cub3D
 SRC = main.c parser.c get_next_line.c get_next_line_utils.c ft_split.c ft_strlcpy.c ft_split.c ft_atoi.c renderer.c math.c\
       init_textures.c init_gun_tex.c cub_manager_init.c move_player.c rotate_player.c cast.c cast_utils.c assets.c color.c\
-	  
+	  border_checker.c checker_utils.c checker.c error.c map.c parser_utils.c
+
 CC = gcc
 CFLAGS = -Wall -Wextra -c  -Iinclude   -O3 -ffast-math -msse4.2 -mtune=intels
 LFLAGS = -lmlx -framework OpenGL  -framework AppKit -fsanitize=address,integer,undefined
