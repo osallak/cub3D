@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cast.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 20:02:10 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/11 20:02:47 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/12 13:42:50 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,14 +26,14 @@ void	choose_closest_intersection(t_ray *ray, t_cast_function *var)
 {
 	if (var->horz_hit_distance < var->vert_hit_distance)
 	{
-		ray->wallHitX = var->horz_wall_hit_x;
-		ray->wallHitY = var->horz_wall_hit_y;
+		ray->wall_hit_x = var->horz_wall_hit_x;
+		ray->wall_hit_y = var->horz_wall_hit_y;
 		ray->distance = var->horz_hit_distance;
 	}
 	else
 	{
-		ray->wallHitX = var->ver_hit_x;
-		ray->wallHitY = var->ver_hit_y;
+		ray->wall_hit_x = var->ver_hit_x;
+		ray->wall_hit_y = var->ver_hit_y;
 		ray->distance = var->vert_hit_distance;
 		ray->was_vert_h = true;
 	}
@@ -41,15 +41,15 @@ void	choose_closest_intersection(t_ray *ray, t_cast_function *var)
 
 void	choose_horz_intersection(t_ray *ray, t_cast_function *var)
 {
-	ray->wallHitX = var->horz_wall_hit_x;
-	ray->wallHitY = var->horz_wall_hit_y;
+	ray->wall_hit_x = var->horz_wall_hit_x;
+	ray->wall_hit_y = var->horz_wall_hit_y;
 	ray->distance = var->horz_hit_distance;
 }
 
 void	choose_ver_intersection(t_ray *ray, t_cast_function *var)
 {
-	ray->wallHitX = var->ver_hit_x;
-	ray->wallHitY = var->ver_hit_y;
+	ray->wall_hit_x = var->ver_hit_x;
+	ray->wall_hit_y = var->ver_hit_y;
 	ray->distance = var->vert_hit_distance;
 	ray->was_vert_h = true;
 }

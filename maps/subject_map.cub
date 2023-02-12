@@ -1,9 +1,9 @@
 NO /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
-C       255   ,    0,    0
+
+C       255   ,,,,    0,    0
 SO /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
 WE /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
 EA /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
-
 
 F       0     ,255,0
 111111111111111

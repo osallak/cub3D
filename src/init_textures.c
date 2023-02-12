@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 19:00:52 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/11 19:05:52 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/12 02:20:13 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,4 +71,3 @@ void	load_door_textures(t_cub_manager *manager)
 	.tex_img_data.line_length, &manager->map->wall_textures[DOOR]. \
 	tex_img_data.endian);
 }
-

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_split.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/05 18:11:55 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/01/30 12:08:40 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 02:19:56 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,8 @@ static int	ft_check_table(char **ptr, int start, int end, int index)
 static void	ft_complete(char *s, char	**splitted, char c)
 {
 	long long	i;
-	int		index;
-	int		j;
+	int			index;
+	int			j;
 
 	i = -1;
 	j = 0;

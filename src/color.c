@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/12 11:59:32 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 12:00:21 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 15:03:29 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ void	get_color(char **map_line, int *color_value, char color)
 	char			*color_str;
 	unsigned char	rgb[3];
 
+	color_str = 0x0;
 	skip_spaces(&i, *map_line);
 	k = 0;
 	if (i == 1 && (*map_line)[i] == ' '\
@@ -42,9 +43,9 @@ void	get_color(char **map_line, int *color_value, char color)
 		{
 			get_color_value(*map_line, &i, &j, &color_str);
 			rgb[k] = ft_atoi(color_str);
-			free(color_str);
 			i = j + 1;
 			++k;
+			free(color_str);
 		}	
 		*color_value = create_trgb(0, rgb[0], rgb[1], rgb[2]);
 	}

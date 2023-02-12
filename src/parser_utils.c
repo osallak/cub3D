@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/12 12:01:35 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 12:01:58 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 16:10:28 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ char	*filter_line(char *line)
 
 void	skip_lines(long *skip, char **map_line, const int map_fd)
 {
+	free(*map_line);
 	*map_line = (get_next_line(map_fd));
 	while (*map_line && *map_line[0] == '\n')
 	{

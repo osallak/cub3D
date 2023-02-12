@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub_manager_init.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 19:09:04 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/11 19:09:52 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/12 15:44:12 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ void	init_map(t_cub_manager *manager, t_map_manager *mapm)
 	char	**map;
 	int		i;
 	int		j;
+	char	*tmp;
 
 	manager->map = mapm;
 	manager->map->map_width = get_map_width(manager->map);
@@ -37,6 +38,10 @@ void	init_map(t_cub_manager *manager, t_map_manager *mapm)
 				map[i][j] = ' ';
 		}
 	}
+	i = -1;
+	while (manager->map->map[++i])
+		free(manager->map->map[i]);
+	free(manager->map->map);
 	manager->map->map = map;
 }
 
@@ -67,10 +72,10 @@ void	init_player(t_cub_manager *manager)
 
 	found_player = 0;
 	i = -1;
-	manager->player.rotation_speed = radians(R_SPEED);
+	manager->player.rotation_speed = radians(TILE_SIZE * 2);
 	manager->time.delta_time = 0;
-	manager->time.lastTick = 0;
-	manager->player.walk_speed = W_SPEED;
+	manager->time.last_tick = 0;
+	manager->player.walk_speed = TILE_SIZE * 2.5;
 	i = -1;
 	while (++i < manager->map->map_height)
 	{
@@ -86,7 +91,7 @@ void	init_player(t_cub_manager *manager)
 
 void	init_manager_attr(t_cub_manager *manager)
 {
-	manager->rays = xalloc(NUMBER_OF_RAYS * sizeof(t_ray));
+	manager->rays = xalloc((WIDTH / WALL_STRIP_WIDTH) * sizeof(t_ray));
 	manager->weapons.gun_state = STAND;
 	manager->weapons.gun_frames = 0;
 	manager->weapons.gun_type = PISTOL;
