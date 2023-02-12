@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 02:17:31 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/12 12:57:56 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@
 # define STAND 1
 #define PISTOL 2
 #define SNIPER 0
-# define mini_x 20
+# define mini_x 15
 # define mini_y 15
 # define VALID_ID "NSWEFC"
 

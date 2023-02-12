@@ -1,16 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parser.h                                           :+:      :+:    :+:   */
+/*   error.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/12/02 16:00:19 by yakhoudr          #+#    #+#             */
-/*   Updated: 2022/12/03 10:31:42 by yakhoudr         ###   ########.fr       */
+/*   Created: 2023/02/12 12:50:13 by yakhoudr          #+#    #+#             */
+/*   Updated: 2023/02/12 12:50:22 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PARSER_H
-# define PARSER_H
+#include "cub3D.h"
 
-#endif
+void	panic(const char *str)
+{
+	printf("%s\n", str);
+	exit(EXIT_FAILURE);
+}
