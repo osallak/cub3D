@@ -6,7 +6,7 @@
 /*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/11 20:12:15 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/12 02:17:31 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -330,4 +330,46 @@ void			intitialize_caster_var(t_cast_function *var);
 bool			__inside_wall_ver(int x, int y, bool isfacingleft, \
 t_cub_manager *mn);
 bool			__inside_wall(int x, int y, bool isfacingup, t_cub_manager *mn);
+void			__initialize_ray_attributes(t_ray *ray);
+void			check_vertical_intersection(t_ray *ray, t_cub_manager *manager, \
+t_cast_function *var);
+void			cast_all_rays(t_cub_manager *manager);
+int				get_ver_tex(t_cub_manager *manager, t_rend_attr *att, int i);
+int				get_hor_tex(t_cub_manager *manager, t_rend_attr *att, int i);
+void			render_celling_floor(t_cub_manager *manager, \
+t_rend_attr att, int i);
+void			rendering_3d_walls(t_cub_manager *manager);
+void			__render_gun(t_cub_manager *mn);
+void			__render_ceiling(t_cub_manager *manager, int x, int y);
+void			__render_floor(t_cub_manager *manager, int x, int y);
+void			cub_mlx_pixel_put(t_img_data *data, t_draw_point_struct p);
+void			clear_window(t_cub_manager *manager, int color, int lx, int ly);
+void			draw_line(t_cub_manager *manager, t_draw_lines_struct lines);
+void			render_cell(t_cub_manager *manager, double mapsx, double mapsy, \
+int i);
+void			draw_minimap(t_cub_manager *manager);
+void			draw_player(t_cub_manager *manager);
+int				draw(t_cub_manager *manager);
+void			paint_wall(t_cub_manager *manager, t_rend_attr *att, int i, \
+int tex);
+void			put_color_into_wall(t_cub_manager *manager, int x, int y, \
+int color);
+int				controls(int key, t_cub_manager *manager);
+int				controls_up(int key, t_cub_manager *manager);
+void			handle_gun_events(int key, t_cub_manager *manager);
+int				__mouse_move(int x, int y, t_cub_manager *manager);
+int				__mouse_press(int button, int x, int y, t_cub_manager *manager);
+void			normalize_angle(double *ang);
+int				__destroy(void);
+long long		get_time(void);
+void			time_utils(t_cub_manager *manager);
+long			get_map_height(t_map_manager *map_manager);
+void			init_rend_attr(t_rend_attr *att);
+void			initialize_vertical_check(t_ray *ray, t_cub_manager *manager, \
+t_cast_function *var);
+long			get_map_width(t_map_manager *map_manager);
+void			*xalloc(size_t size);
+void			reset_gun_frames(t_cub_manager *manager);
+void			init_mlx(t_cub_manager *manager);
+void			calc_wall_att(t_cub_manager *manager, t_rend_attr *att, int i);
 #endif
