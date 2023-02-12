@@ -65,10 +65,7 @@ void	move_player_dda(t_cub_manager *manager, double nx, double ny)
 	i = -1;
 	while (++i <= st)
 	{
-		if (nx / TILE_SIZE >= 0 && nx / TILE_SIZE < \
-		manager->map->map_width && ny / TILE_SIZE >= \
-		0 && ny / TILE_SIZE < manager->map->map_height \
-		&& manager->map->map[(int)ny / TILE_SIZE][(int)nx / TILE_SIZE] == '1')
+		if (is_wall(manager, nx, ny))
 		{
 			increment = false;
 			break ;

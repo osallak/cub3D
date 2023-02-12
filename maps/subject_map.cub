@@ -1,10 +1,9 @@
-NO /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
+NO ./assets/wall_north.xpm
 
-C       53   ,81,  92   
-SO /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
-WE /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
-EA /Users/yakhoudr/cube3d/assets/high_quality_wall.xpm
-
+C       53   ,81,  92
+SO ./assets/wall_south.xpm
+WE ./assets/wall_west.xpm
+EA ./assets/wall_east.xpm
 F       202     ,164,1
 111111111111111
 100000100000001

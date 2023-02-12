@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 18:29:01 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 18:50:57 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -400,4 +400,5 @@ void			panic_rgb(int k);
 void			__norm_color(unsigned int *i, int *k, \
 unsigned int *j, char *color_str);
 void			init_player(t_cub_manager *manager);
+bool			is_wall(t_cub_manager *manager, double nx, double ny);
 #endif

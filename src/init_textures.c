@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_textures.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 19:00:52 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/12 02:20:13 by osallak          ###   ########.fr       */
+/*   Updated: 2023/02/12 19:16:05 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ void	protect_textures(t_cub_manager *manager, bool flag)
 	int	i;
 
 	i = -1;
-	while (++i < DOOR)
+	while (++i <= DOOR)
 	{
 		if (flag && manager->map->wall_textures[i].img == NULL)
 			panic("Error: while decoding textures");
@@ -31,7 +31,7 @@ void	getting_textures_data(t_cub_manager *manager)
 	int	i;
 
 	i = -1;
-	while (++i < DOOR)
+	while (++i <= DOOR)
 	{
 		manager->map->wall_textures[i].tex_img_data.addr = \
 		mlx_get_data_addr(manager->map->wall_textures[i].img, \
