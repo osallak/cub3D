@@ -6,18 +6,28 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 19:09:04 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/12 15:44:12 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 18:29:52 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3D.h"
+
+static void	free_old_map(t_cub_manager *manager, char **map)
+{
+	int	i;
+
+	i = -1;
+	while (manager->map->map[++i])
+		free(manager->map->map[i]);
+	free(manager->map->map);
+	manager->map->map = map;
+}
 
 void	init_map(t_cub_manager *manager, t_map_manager *mapm)
 {
 	char	**map;
 	int		i;
 	int		j;
-	char	*tmp;
 
 	manager->map = mapm;
 	manager->map->map_width = get_map_width(manager->map);
@@ -38,11 +48,7 @@ void	init_map(t_cub_manager *manager, t_map_manager *mapm)
 				map[i][j] = ' ';
 		}
 	}
-	i = -1;
-	while (manager->map->map[++i])
-		free(manager->map->map[i]);
-	free(manager->map->map);
-	manager->map->map = map;
+	free_old_map(manager, map);
 }
 
 int	check_if_cell_has_player(t_cub_manager *manager, int i, int j)
@@ -62,31 +68,6 @@ int	check_if_cell_has_player(t_cub_manager *manager, int i, int j)
 		return (1);
 	}
 	return (0);
-}
-
-void	init_player(t_cub_manager *manager)
-{
-	int	found_player;
-	int	i;
-	int	j;
-
-	found_player = 0;
-	i = -1;
-	manager->player.rotation_speed = radians(TILE_SIZE * 2);
-	manager->time.delta_time = 0;
-	manager->time.last_tick = 0;
-	manager->player.walk_speed = TILE_SIZE * 2.5;
-	i = -1;
-	while (++i < manager->map->map_height)
-	{
-		j = -1;
-		while (++j < manager->map->map_width)
-			if (check_if_cell_has_player(manager, i, j))
-				break ;
-	}
-	manager->player.move_x = false;
-	manager->player.move_y = false;
-	manager->player.rotate = false;
 }
 
 void	init_manager_attr(t_cub_manager *manager)

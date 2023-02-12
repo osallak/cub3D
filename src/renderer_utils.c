@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 23:32:12 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/12 13:44:11 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 17:50:56 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ static t_pair_double	draw_line_helper(t_draw_lines_struct l, int *st)
 	t_pair_double	incs;
 
 	dxy.x = l.end.x - l.start.x;
-	dxy.y = l.end.y - l.start.x;
+	dxy.y = l.end.y - l.start.y;
 	steps = fmax(fabs(dxy.x), fabs(dxy.y));
 	*st = round(steps);
 	incs.x = dxy.x / steps;
@@ -61,7 +61,7 @@ void	draw_line(t_cub_manager *manager, t_draw_lines_struct lines)
 	int					st;
 	int					i;
 
-	draw_line_helper(lines, &st);
+	incs = draw_line_helper(lines, &st);
 	coor.point.x = lines.start.x;
 	coor.point.y = lines.start.y;
 	coor.limits = lines.limits;

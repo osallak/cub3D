@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/02 16:02:45 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 13:55:39 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 18:29:01 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,8 @@
 # define FOV (60)
 # define SCALING_FACTOR ((double)0.3)
 # define LINE_LENGTH (30)
-# define WIDTH 720
-# define HEIGHT 480
+# define WIDTH 960
+# define HEIGHT 720
 # define NORTH 0
 # define SOUTH 1 
 # define EAST 2
@@ -393,4 +393,11 @@ void			_norm_fill_map(char **map, int map_fd, \
 int index, long map_lines);
 void			check_valid_space(char **map, long map_lines);
 void			check_for_duplicate_pcharacter(t_quadri_long *tmp, char **map);
+void			free_uncessary(char ***splitted, char *cmp, char *map_line);
+void			get_color_value(char *map_line, unsigned int *i, \
+unsigned int *j, char **color_value);
+void			panic_rgb(int k);
+void			__norm_color(unsigned int *i, int *k, \
+unsigned int *j, char *color_str);
+void			init_player(t_cub_manager *manager);
 #endif

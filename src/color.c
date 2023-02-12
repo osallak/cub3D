@@ -6,22 +6,11 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/12 11:59:32 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 15:03:29 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 18:25:40 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3D.h"
-
-void	get_color_value(char *map_line, unsigned int *i, \
-unsigned int *j, char **color_value)
-{
-	while (*i < ft_strlen(map_line) && map_line[*i] == ' ')
-		++(*i);
-	*j = *i;
-	while (*j < ft_strlen(map_line) && map_line[*j] != ',')
-		++(*j);
-	*color_value = ft_substr(map_line, *i, *j);
-}
 
 void	get_color(char **map_line, int *color_value, char color)
 {
@@ -41,13 +30,14 @@ void	get_color(char **map_line, int *color_value, char color)
 			panic("Error: duplicate color value");
 		while (i < ft_strlen(*map_line))
 		{
+			panic_rgb(k);
 			get_color_value(*map_line, &i, &j, &color_str);
 			rgb[k] = ft_atoi(color_str);
-			i = j + 1;
-			++k;
-			free(color_str);
+			__norm_color(&i, &k, &j, color_str);
 		}	
 		*color_value = create_trgb(0, rgb[0], rgb[1], rgb[2]);
+		if ((*map_line)[ft_strlen(*map_line) - 1] == ',')
+			panic("Error: semicolon at end of color definition");
 	}
 }
 

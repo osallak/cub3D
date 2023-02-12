@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 23:47:41 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/12 16:13:12 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 17:50:22 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ void	draw_player(t_cub_manager *manager)
 	line.color = 0x0000ff00;
 	line.start.x = round(MINI_X * 10 / 2.0);
 	line.start.y = round(MINI_Y * 6 / 2.0);
+	line.limits.x = MINI_X * 10;
+	line.limits.y = MINI_Y * 6;
 	i = -1;
 	while (++i < 3)
 	{

@@ -6,7 +6,7 @@
 /*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/04 10:59:31 by yakhoudr          #+#    #+#             */
-/*   Updated: 2023/02/12 13:50:17 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/12 18:17:16 by yakhoudr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,8 @@ int	ft_atoi(char *str)
 	while (str[end] == ' ')
 		--end;
 	i = 0;
+	if (end < begin)
+		panic("Error: invalid colors");
 	while (begin <= end)
 		__atoi_norm(str, &begin, &res, &i);
 	if (res < 0 || res > 255)
