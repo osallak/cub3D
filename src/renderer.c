@@ -188,37 +188,6 @@ int	controls_up(int key, t_cub_manager *manager)
 	return (0);
 }
 
-// sd stands for slide direction
-
-// void	move_player_dda(t_cub_manager *manager, double nx, double ny)
-// {
-// 	t_pair_double	d_b_a;
-// 	bool			increment;
-// 	t_pair_double	increment_xy;
-// 	int				st;
-// 	int				i;
-
-// 	d_b_a.x = nx;
-// 	d_b_a.y = ny;
-// 	increment = true;
-// 	increment_xy = get_x_y_increment(manager, nx, ny, &st);
-// 	i = -1;
-// 	while (++i <= st)
-// 	{
-// 		if (nx / TILE_SIZE >= 0 && nx / TILE_SIZE < \
-// 		manager->map->map_width && ny / TILE_SIZE >= \
-// 		0 && ny / TILE_SIZE < manager->map->map_height \
-// 		&& manager->map->map[(int)ny / TILE_SIZE][(int)nx / TILE_SIZE] == '1')
-// 		{
-// 			increment = false;
-// 			break ;
-// 		}
-// 		nx += increment_xy.x;
-// 		ny += increment_xy.y;
-// 	}
-// 	update_player_position(manager, d_b_a, increment);
-// }
-
 void	time_utils(t_cub_manager *manager)
 {
 	if (manager->time.lastTick == 0)
@@ -349,8 +318,6 @@ t_cast_function *var)
 	}
 }
 
-
-
 void	__initialize_ray_attributes(t_ray *ray)
 {
 	ray->distance = 0;
@@ -368,7 +335,6 @@ void	__initialize_ray_attributes(t_ray *ray)
 		ray->is_fac_right = false;
 	ray->is_fac_left = !ray->is_fac_right;
 }
-
 
 void	*xalloc(size_t size)
 {
