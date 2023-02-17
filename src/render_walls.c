@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   render_walls.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yakhoudr <yakhoudr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: osallak <osallak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/11 22:49:56 by osallak           #+#    #+#             */
-/*   Updated: 2023/02/12 13:40:10 by yakhoudr         ###   ########.fr       */
+/*   Updated: 2023/02/17 16:36:43 by osallak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cub3D.h"
+#include "../include/cub3D.h"
 
 void	render_celling_floor(t_cub_manager *manager, t_rend_attr att, int i)
 {
@@ -66,6 +66,17 @@ void	__render_gun(t_cub_manager *mn)
 			put_color_into_wall(mn, x, y, \
 			*(((int *)choosen_gun.tex_img_data.addr + \
 			((y - y_start) * choosen_gun.wi + (x - x_start)))));
+	}
+	if (mn->weapons.gun_state == SHOOT && mn->weapons.gun_frames == 3)
+	{
+		int pid = fork();
+		if (pid < 0)
+			panic("error");
+		if (pid == 0)
+		{
+			system("afplay assets/shoot.mp3");
+			exit(0);
+		}
 	}
 	reset_gun_frames(mn);
 }
